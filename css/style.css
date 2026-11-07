@@ -323,3 +323,15 @@ h1.view-title { font-size: 26px; margin: 4px 4px 12px; font-weight: 700; }
 .guide summary::-webkit-details-marker { display: none; }
 .guide summary::after { content: '▾'; margin-left: auto; color: var(--cyan); transition: transform .2s; }
 .guide[open] summary::after { transform: rotate(180deg); }
+
+/* special countdown */
+.special { text-align: center; position: relative; overflow: hidden;
+  background: linear-gradient(140deg, rgba(244,114,182,.22), rgba(167,139,250,.16) 55%, rgba(14,18,38,.6));
+  border-color: rgba(244,114,182,.55); box-shadow: 0 0 40px rgba(244,114,182,.25), inset 0 1px 0 rgba(255,255,255,.08); }
+.sp-head { font-family: 'Prompt', sans-serif; font-size: 22px; font-weight: 700; color: #fff; text-shadow: 0 0 16px rgba(244,114,182,.7); }
+.sp-date { font-size: 14px; color: #f9c4dd; margin-bottom: 10px; }
+.sp-count { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.sp-cell { background: rgba(0,0,0,.3); border: 1px solid rgba(244,114,182,.35); border-radius: 14px; padding: 8px 0 6px; }
+.sp-cell b { display: block; font-family: 'Orbitron', sans-serif; font-size: 26px; font-weight: 800; color: #fff; text-shadow: 0 0 14px rgba(244,114,182,.8); font-variant-numeric: tabular-nums; }
+.sp-cell span { font-size: 12px; color: #f9c4dd; }
+.sp-today { font-family: 'Prompt', sans-serif; font-size: 30px; font-weight: 700; color: #fff; }

@@ -193,5 +193,15 @@ export function buildNotifications(data, ds) {
       tags: [e.type === 'it' ? 'computer' : 'pushpin'], priority: 4,
     }));
   }
+  // Special day (e.g. birthday): one heads-up a week before
+  if (data.special) {
+    const sp = data.special, n = sp.remindDays || 7;
+    const target = addDays(ds, n);
+    const [, tm, td] = parseDS(target);
+    if (tm === sp.month && td === sp.day) evening({
+      title: `${sp.emoji || '💖'} อีก ${n} วัน ${sp.title}!`,
+      message: `${thaiDate(target)}\nเตรียมของขวัญ/เซอร์ไพรส์ให้พร้อมนะ 🎁`, priority: 5,
+    });
+  }
   return out.sort((a, b) => a.at - b.at);
 }

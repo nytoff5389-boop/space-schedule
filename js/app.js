@@ -1,6 +1,6 @@
 import {
   TH_DAYS, TH_DAYS_SHORT, TH_MONTHS, addDays, dow, diffDays, toMin, fmtTime, bkkNow, thaiDate,
-  dayInfo, nextClassDay, examsOn, holidaysOn, eventsOn, buildNotifications, toDS, parseDS, termPhase,
+  dayInfo, nextClassDay, bkkEpoch, examsOn, holidaysOn, eventsOn, buildNotifications, toDS, parseDS, termPhase,
 } from './core.js';
 import { sfx } from './sfx.js';
 import { warpJump } from './space.js';
@@ -33,6 +33,38 @@ const relDay = (ds) => {
 function dateChip(ds) {
   const [, m, d] = parseDS(ds);
   return `<div class="date-chip"><b>${d}</b><span>${TH_DAYS_SHORT[dow(ds)]} ${['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'][m - 1]}</span></div>`;
+}
+
+// ---------- SPECIAL COUNTDOWN ----------
+function specialTarget() {
+  const sp = data.special; if (!sp) return null;
+  const { date } = bkkNow();
+  let [y] = parseDS(date);
+  let ds = toDS(y, sp.month, sp.day);
+  if (ds < date) ds = toDS(y + 1, sp.month, sp.day);
+  return ds;
+}
+function specialText() {
+  const ds = specialTarget(); if (!ds) return null;
+  const now = bkkNow();
+  if (ds === now.date) return { today: true, ds };
+  const secs = Math.max(0, bkkEpoch(ds, 0) - Math.floor(Date.now() / 1000));
+  return { ds, d: Math.floor(secs / 86400), h: Math.floor((secs % 86400) / 3600), m: Math.floor((secs % 3600) / 60), s: secs % 60 };
+}
+function specialCard() {
+  const sp = data.special, t = specialText(); if (!t) return '';
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const body = t.today
+    ? `<div class="sp-today">วันนี้แล้ว! 🎂🎉</div>`
+    : `<div class="sp-count" id="spCount">${[['d', t.d, 'วัน'], ['h', pad2(t.h), 'ชั่วโมง'], ['m', pad2(t.m), 'นาที'], ['s', pad2(t.s), 'วินาที']].map(([k, v, l]) => `<div class="sp-cell"><b data-k="${k}">${v}</b><span>${l}</span></div>`).join('')}</div>`;
+  return `<section class="panel special"><div class="sp-head">${sp.emoji} ${esc(sp.title)}</div><div class="sp-date">${thaiDate(t.ds)}</div>${body}</section>`;
+}
+function updateSpecial() {
+  const el = document.getElementById('spCount'); if (!el) return;
+  const t = specialText(); if (!t || t.today) { render(false); return; }
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const v = { d: t.d, h: pad2(t.h), m: pad2(t.m), s: pad2(t.s) };
+  el.querySelectorAll('b').forEach((b) => { const nv = String(v[b.dataset.k]); if (b.textContent !== nv) b.textContent = nv; });
 }
 
 // ---------- TODAY ----------
@@ -118,7 +150,7 @@ function renderToday() {
   const { minutes } = bkkNow();
   const isToday = ds === state.today;
   const sub = { class: `สัปดาห์ที่ ${info.week} ของภาคเรียน`, midterm: 'สัปดาห์สอบกลางภาค', final: 'ช่วงสอบปลายภาค', study: 'ช่วงอ่านหนังสือก่อนสอบ', before: 'ก่อนเปิดภาคเรียน', after: 'ปิดภาคเรียน' }[info.phase];
-  let html = `<div class="daynav">
+  let html = (isToday ? specialCard() : '') + `<div class="daynav">
       <button class="big-arrow" data-act="day" data-n="-1" aria-label="วันก่อนหน้า">‹</button>
       <div class="daynav-center"><div class="daynav-day">${isToday ? 'วันนี้ • ' : ''}${TH_DAYS[info.dow]}</div>
         <div class="daynav-sub">${thaiDate(ds, { weekday: false })} • ${sub}</div>
@@ -385,6 +417,7 @@ function tick() {
   const now = bkkNow();
   const hh = String(Math.floor(now.minutes / 60)).padStart(2, '0'), mm = String(now.minutes % 60).padStart(2, '0');
   $('#hudClock').textContent = `${hh}:${mm}`;
+  updateSpecial();
   if (now.date !== state.today) { // new day (or first run)
     const first = !state.today;
     const wasOnToday = state.date === state.today;

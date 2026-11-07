@@ -1,4 +1,5 @@
 {
+  "special": { "title": "วันเกิดแฟน", "month": 11, "day": 27, "emoji": "💖", "remindDays": 7 },
   "siteUrl": "https://nytoff5389-boop.github.io/space-schedule/",
   "term": {
     "name": "ภาคการศึกษาที่ 2/2569",
@@ -10,7 +11,7 @@
   "ntfy": {
     "server": "https://ntfy.sh",
     "topic": "biimoi-space-schedule-7x4k9q",
-    "leadMinutes": 15,
+    "leadMinutes": 30,
     "morningTime": "06:30",
     "eveningTime": "19:00",
     "labRemindDays": [2, 1],
