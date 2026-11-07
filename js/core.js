@@ -153,7 +153,7 @@ export function buildNotifications(data, ds) {
   let k = 0;
   const evening = (n) => push(ds, ev + (k++), n);
   const todayHolidayNames = new Set(today.holidays.map((h) => h.name));
-  const newHolidays = tomorrow.holidays.filter((h) => !todayHolidayNames.has(h.name) && (h.start || !tomorrow.weekend));
+  const newHolidays = today.holidays.length ? [] : tomorrow.holidays.filter((h) => !todayHolidayNames.has(h.name) && (h.start || !tomorrow.weekend));
   if (newHolidays.length) {
     evening({
       title: `🎉 พรุ่งนี้วันหยุด: ${newHolidays.map((h) => h.name).join(' / ')}`,
@@ -167,6 +167,16 @@ export function buildNotifications(data, ds) {
       message: extra.length ? extra.join('\n') : 'พักผ่อนให้เต็มที่ หรือทบทวนบทเรียนนะ ✨', tags: ['crescent_moon'], priority: 3,
     });
   }
+  // Back to class after a break (holiday block / exam week), not after a normal weekend
+  if (tomorrow.classes.length) {
+    let gap = 0;
+    for (let i = 1; i <= 10; i++) { if (dayInfo(data, addDays(tomorrowDs, -i)).classes.length) break; gap++; }
+    if (gap >= 4 && gap < 10) evening({
+      title: '📚 พรุ่งนี้กลับมาเรียนแล้ว',
+      message: tomorrow.classes.map((c) => `${fmtTime(c.start)} ${c.code} ${c.course.name} • ${c.room}`).join('\n'),
+      priority: 4,
+    });
+  }
   // Labs N days ahead
   [...cfg.labRemindDays].sort((a, b) => b - a).forEach((n) => {
     const info = dayInfo(data, addDays(ds, n));
@@ -178,9 +188,11 @@ export function buildNotifications(data, ds) {
   });
   // Exams N days ahead
   [...cfg.examRemindDays].sort((a, b) => b - a).forEach((n) => {
-    examsOn(data, addDays(ds, n)).forEach((x) => evening({
-      title: `📝 ${n === 1 ? 'พรุ่งนี้' : `อีก ${n} วัน`} สอบ ${x.code} ${x.course ? x.course.name : ''}`,
-      message: `${thaiDate(x.date)} ${fmtTime(x.start)}–${fmtTime(x.end)} น.\n${x.title}`, tags: ['memo'], priority: 4,
+    const byCourse = {};
+    examsOn(data, addDays(ds, n)).forEach((x) => (byCourse[x.code] ||= []).push(x));
+    Object.values(byCourse).forEach((xs) => evening({
+      title: `📝 ${n === 1 ? 'พรุ่งนี้' : `อีก ${n} วัน`} สอบ ${xs[0].code} ${xs[0].course ? xs[0].course.name : ''}`,
+      message: `${thaiDate(xs[0].date)}\n` + xs.map((x) => `${fmtTime(x.start)}–${fmtTime(x.end)} น. ${x.title}`).join('\n'), tags: ['memo'], priority: 4,
     }));
   });
   // Events with remindDays

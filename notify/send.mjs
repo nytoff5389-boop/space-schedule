@@ -35,7 +35,8 @@ if (!dry) {
 let sent = 0;
 for (const n of list) {
   const label = `${n.time}  ${n.title}`;
-  if (n.at < nowSec - 120) { console.log('  skip (past)  ', label); continue; }
+  // If GitHub started the job late, still deliver anything up to 45 min overdue.
+  if (n.at < nowSec - 45 * 60) { console.log('  skip (past)  ', label); continue; }
   if (existing.has(`${n.title}|${n.at}`)) { console.log('  skip (dup)   ', label); continue; }
   if (dry) { console.log('  DRY          ', label, '\n                ', n.message.replace(/\n/g, '\n                 ')); continue; }
   const body = { topic, title: n.title, message: n.message, priority: n.priority }; // emoji already in title
