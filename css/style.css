@@ -312,3 +312,14 @@ h1.view-title { font-size: 26px; margin: 4px 4px 12px; font-weight: 700; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* test countdown + collapsible guide */
+.countdown-big { min-height: 0; text-align: center; font-family: 'Orbitron', 'Prompt', sans-serif; font-weight: 800; font-size: 64px; line-height: 1; color: #fff; text-shadow: 0 0 24px rgba(103,232,249,.8); }
+.countdown-big:not(:empty) { min-height: 90px; padding-top: 14px; }
+.countdown-big.pop { animation: pop .6s cubic-bezier(.2,1.6,.4,1); }
+@keyframes pop { from { transform: scale(2.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.big-btn:disabled { opacity: .5; }
+.guide summary { cursor: pointer; font-weight: 600; list-style: none; min-height: 44px; display: flex; align-items: center; }
+.guide summary::-webkit-details-marker { display: none; }
+.guide summary::after { content: '▾'; margin-left: auto; color: var(--cyan); transition: transform .2s; }
+.guide[open] summary::after { transform: rotate(180deg); }

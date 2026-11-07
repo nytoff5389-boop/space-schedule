@@ -237,7 +237,15 @@ function renderAlerts() {
   const nowSec = Date.now() / 1000;
   const list = preview.filter((n) => n.at > nowSec).slice(0, 14).map((n) => `<div class="notif"><div class="nw">${thaiDate(n.date, { short: true })} • ${n.time} น.</div><div class="nt">${esc(n.title)}</div><div class="nm">${esc(n.message)}</div></div>`).join('');
   return `<h1 class="view-title">ระบบแจ้งเตือน</h1>
-    <section class="panel"><b>📲 รับแจ้งเตือนบน iPhone / iPad ผ่าน ntfy</b>
+    <section class="panel test-panel">
+      <b>🛰️ ทดสอบแจ้งเตือน</b>
+      <div class="small muted">กดแล้วนับถอยหลัง 3-2-1 จากนั้นจะส่งแจ้งเตือนจริงเข้า iPhone ทันที (ตัวอย่างคาบเรียนถัดไป)</div>
+      <div class="countdown-big" id="cd" aria-live="polite"></div>
+      <button class="big-btn" data-act="test" id="testBtn">🚀 ทดสอบแจ้งเตือน</button>
+    </section>
+    <section class="panel"><div class="toggle-row"><div><b>🔊 เสียงตอนกดปุ่ม</b><div class="small muted">เสียงกดปุ่มและเสียงเครื่องยนต์ยาน</div></div><button class="switch${sfx.enabled ? ' on' : ''}" data-act="sound" aria-label="เปิดปิดเสียง"></button></div></section>
+    <div class="section-title">แจ้งเตือนที่จะส่ง 7 วันข้างหน้า</div><div class="list">${list || '<div class="panel muted">ไม่มีแจ้งเตือนใน 7 วันนี้</div>'}</div>
+    <details class="panel guide"><summary>📲 วิธีตั้งค่าการแจ้งเตือน และรายละเอียด</summary>
       <div class="steps" style="margin-top:12px">
         <div class="step">ติดตั้งแอป <b>ntfy</b> จาก App Store แล้วอนุญาตการแจ้งเตือน</div>
         <div class="step">ในแอปกด <b>+</b> แล้วใส่ชื่อหัวข้อ (topic) ด้านล่าง ให้ server เป็น ntfy.sh</div>
@@ -247,15 +255,43 @@ function renderAlerts() {
       <button class="big-btn" data-act="copy">📋 คัดลอกชื่อหัวข้อ</button>
       <a class="big-btn ghost" href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noopener">⬇️ ดาวน์โหลดแอป ntfy</a>
       <a class="big-btn ghost" href="${esc(url)}" target="_blank" rel="noopener">🌐 เปิดหัวข้อในเว็บ ntfy</a>
-    </section>
-    <section class="panel small"><b>⏰ จะแจ้งเตือนอะไรบ้าง</b><br>
+      <div class="small" style="margin-top:14px"><b>⏰ จะแจ้งเตือนอะไรบ้าง</b><br>
       • ${cfg.morningTime} น. สรุปคาบเรียนของวันนี้<br>
       • ก่อนเรียนทุกคาบ ${cfg.leadMinutes} นาที พร้อมหัวข้อที่จะเรียนจากคอร์สซิลลาบัส<br>
       • ${cfg.eveningTime} น. ของวันก่อนหน้า: วันหยุดพิเศษ (ที่ไม่ใช่เสาร์–อาทิตย์) และวันว่างในตาราง<br>
       • วันเรียน Lab (ห้อง ${data.labRooms.join(', ')}) และอบรม IT: ล่วงหน้า ${cfg.labRemindDays.join(' และ ')} วัน<br>
-      • วันสอบ: ล่วงหน้า ${cfg.examRemindDays.join(' และ ')} วัน และก่อนสอบ 1 ชม.</section>
-    <section class="panel"><div class="toggle-row"><div><b>🔊 เสียงตอนกดปุ่ม</b><div class="small muted">เสียงน่ารัก ๆ และเสียงวาร์ปอวกาศ</div></div><button class="switch${sfx.enabled ? ' on' : ''}" data-act="sound" aria-label="เปิดปิดเสียง"></button></div></section>
-    <div class="section-title">แจ้งเตือนที่จะส่ง 7 วันข้างหน้า</div><div class="list">${list || '<div class="panel muted">ไม่มีแจ้งเตือนใน 7 วันนี้</div>'}</div>`;
+      • วันสอบ: ล่วงหน้า ${cfg.examRemindDays.join(' และ ')} วัน และก่อนสอบ 1 ชม.</div>
+    </details>`;
+}
+
+let testing = false;
+async function runTest(btn) {
+  if (testing) return;
+  testing = true; btn.disabled = true;
+  const cd = $('#cd');
+  for (const n of [3, 2, 1]) {
+    cd.textContent = n; cd.classList.remove('pop'); void cd.offsetWidth; cd.classList.add('pop');
+    sfx.blip(1);
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  cd.textContent = '🚀'; cd.classList.remove('pop'); void cd.offsetWidth; cd.classList.add('pop');
+  sfx.warp(); warpJump(); if (ship) ship.maneuver();
+  const nxt = nextClassDay(data, state.today, false);
+  const { minutes } = bkkNow();
+  let c = nxt && nxt.classes.find((k) => nxt.date !== state.today || toMin(k.start) > minutes);
+  let info = nxt;
+  if (!c && nxt) { info = nextClassDay(data, nxt.date); c = info && info.classes[0]; }
+  const message = c
+    ? `ตัวอย่าง: คาบถัดไป ${thaiDate(info.date, { short: true })} ${fmtTime(c.start)}–${fmtTime(c.end)} น.\n${c.code} ${c.course.name} • ห้อง ${c.room}${c.topic ? `\nวันนี้เรียน: ${c.topic}` : ''}`
+    : 'ระบบแจ้งเตือนทำงานปกติ';
+  try {
+    const r = await fetch(data.ntfy.server, { method: 'POST', body: JSON.stringify({ topic: data.ntfy.topic, title: '🧪 ทดสอบแจ้งเตือน', message, priority: 4, click: data.siteUrl }) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    cd.textContent = '✅ ส่งแล้ว!'; sfx.chime();
+  } catch (e) {
+    cd.textContent = '⚠️ ส่งไม่สำเร็จ ลองใหม่อีกครั้ง';
+  }
+  setTimeout(() => { btn.disabled = false; testing = false; }, 1500);
 }
 
 // ---------- render / navigation ----------
@@ -315,6 +351,8 @@ view.addEventListener('click', async (e) => {
     sfx.tap();
     try { await navigator.clipboard.writeText(data.ntfy.topic); b.textContent = '✅ คัดลอกแล้ว'; }
     catch (_) { const sel = getSelection(); const rg = document.createRange(); rg.selectNodeContents($('#topicBox')); sel.removeAllRanges(); sel.addRange(rg); b.textContent = 'เลือกข้อความแล้ว กดคัดลอกได้เลย'; }
+  } else if (act === 'test') {
+    sfx.tap(); runTest(b);
   } else if (act === 'sound') {
     const on = !sfx.enabled; sfx.set(on); sfx.toggle(on); b.classList.toggle('on', on); updateSoundBtn();
   }
