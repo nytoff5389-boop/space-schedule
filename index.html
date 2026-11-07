@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ตารางเรียนอวกาศ</title>
+<meta name="description" content="ตารางเรียน ภาค 2/2569 ธีมอวกาศ พร้อมแจ้งเตือนผ่าน ntfy">
+<meta name="theme-color" content="#04040c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ตารางเรียน">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600&family=Orbitron:wght@600;800&family=Prompt:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="space" aria-hidden="true"></canvas>
+<div class="nebula" aria-hidden="true"></div>
+<div class="sky" aria-hidden="true">
+  <div class="star-sun"></div>
+  <div class="planet planet-gas"><i></i></div>
+  <div class="planet planet-ring"><i></i><b></b></div>
+  <div class="planet planet-moon"></div>
+</div>
+<div id="flash" aria-hidden="true"></div>
+
+<div class="app">
+  <header class="hud">
+    <div class="hud-left">
+      <div class="hud-label" id="hudTerm">ภาค 2/2569</div>
+      <div class="hud-date" id="hudDate">…</div>
+    </div>
+    <div class="hud-clock" id="hudClock">--:--</div>
+    <button class="icon-btn" id="soundBtn" aria-label="เปิด/ปิดเสียง"></button>
+  </header>
+
+  <div class="ship-stage" aria-hidden="true">
+    <div class="ship" id="ship">
+      <svg viewBox="0 0 140 190" class="ship-svg">
+        <defs>
+          <linearGradient id="hullG" x1="0" x2="1">
+            <stop offset="0" stop-color="#2a3142"/><stop offset=".28" stop-color="#9aa6bb"/>
+            <stop offset=".48" stop-color="#eef2f8"/><stop offset=".62" stop-color="#a7b2c6"/>
+            <stop offset="1" stop-color="#1b2030"/>
+          </linearGradient>
+          <linearGradient id="wingG" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stop-color="#5b667c"/><stop offset=".6" stop-color="#2b3244"/><stop offset="1" stop-color="#151a26"/>
+          </linearGradient>
+          <linearGradient id="wingGR" x1="1" x2="0"><stop offset="0" stop-color="#1b2131"/><stop offset=".7" stop-color="#4b5569"/><stop offset="1" stop-color="#6f7a90"/></linearGradient>
+          <linearGradient id="wingGL" x1="0" x2="1"><stop offset="0" stop-color="#1b2131"/><stop offset=".7" stop-color="#4b5569"/><stop offset="1" stop-color="#6f7a90"/></linearGradient>
+          <radialGradient id="glassG" cx=".38" cy=".3" r=".8">
+            <stop offset="0" stop-color="#e0fbff"/><stop offset=".25" stop-color="#5eead4"/>
+            <stop offset=".6" stop-color="#0e7490"/><stop offset="1" stop-color="#062033"/>
+          </radialGradient>
+          <linearGradient id="flameG" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stop-color="#ffffff"/><stop offset=".18" stop-color="#bff7ff"/>
+            <stop offset=".5" stop-color="#38bdf8" stop-opacity=".85"/><stop offset="1" stop-color="#6366f1" stop-opacity="0"/>
+          </linearGradient>
+          <radialGradient id="nozzleG"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#7dd3fc"/><stop offset="1" stop-color="#0c4a6e"/></radialGradient>
+        </defs>
+        <!-- engine flames -->
+        <g class="flames">
+          <path class="flame f1" d="M45 150 Q52 150 52 152 L48.5 188 L45.5 188 L42 152 Q42 150 45 150Z" fill="url(#flameG)"/>
+          <path class="flame f2" d="M95 150 Q98 150 98 152 L94.5 188 L91.5 188 L88 152 Q88 150 95 150Z" fill="url(#flameG)"/>
+          <path class="flame f3" d="M70 150 L76 152 L71.5 182 L68.5 182 L64 152Z" fill="url(#flameG)"/>
+        </g>
+        <!-- wings -->
+        <path d="M58 70 L10 128 L8 140 L22 142 L58 120Z" fill="url(#wingGL)"/>
+        <path d="M82 70 L130 128 L132 140 L118 142 L82 120Z" fill="url(#wingGR)"/>
+        <path d="M14 132 L50 104 M126 132 L90 104" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" opacity=".85"/>
+        <path d="M10 128 L8 140 L22 142 L24 134Z M130 128 L132 140 L118 142 L116 134Z" fill="#c2410c" opacity=".9"/>
+        <!-- nacelles -->
+        <rect x="38" y="104" width="14" height="46" rx="6" fill="url(#hullG)"/>
+        <rect x="88" y="104" width="14" height="46" rx="6" fill="url(#hullG)"/>
+        <ellipse cx="45" cy="150" rx="6.5" ry="3" fill="url(#nozzleG)"/>
+        <ellipse cx="95" cy="150" rx="6.5" ry="3" fill="url(#nozzleG)"/>
+        <!-- hull -->
+        <path d="M70 4 C78 22 86 52 87 86 L88 132 Q88 150 70 152 Q52 150 52 132 L53 86 C54 52 62 22 70 4Z" fill="url(#hullG)"/>
+        <path d="M70 4 C74 18 77 32 78 44 L62 44 C63 32 66 18 70 4Z" fill="#f8fafc" opacity=".35"/>
+        <!-- panel lines -->
+        <g stroke="#0f172a" stroke-width=".8" opacity=".45" fill="none">
+          <path d="M56 78 H84 M54 100 H86 M54 122 H86"/>
+          <path d="M62 100 V150 M78 100 V150"/>
+        </g>
+        <rect x="66" y="104" width="8" height="14" rx="2" fill="#0f172a" opacity=".55"/>
+        <rect x="67.2" y="106" width="5.6" height="2.4" rx="1" fill="#22d3ee" class="blink-slow"/>
+        <!-- cockpit -->
+        <path d="M70 26 C77 34 79 48 78 62 Q70 68 62 62 C61 48 63 34 70 26Z" fill="url(#glassG)" stroke="#0b1220" stroke-width="1.2"/>
+        <path d="M67 34 C64 42 64 50 65 56" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7" fill="none"/>
+        <!-- nav lights -->
+        <circle cx="9" cy="137" r="2.6" fill="#ef4444" class="blink"/>
+        <circle cx="131" cy="137" r="2.6" fill="#22c55e" class="blink"/>
+        <circle cx="70" cy="9" r="1.6" fill="#fff" class="blink-slow"/>
+      </svg>
+    </div>
+  </div>
+
+  <main id="view" class="view" tabindex="-1"></main>
+
+  <nav class="console" aria-label="เมนูหลัก">
+    <button class="nav-btn" data-view="today"><span class="nav-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></span><span>วันนี้</span></button>
+    <button class="nav-btn" data-view="week"><span class="nav-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M8 4v16M13 4v16"/></svg></span><span>ตาราง</span></button>
+    <button class="nav-btn" data-view="month"><span class="nav-ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 2v5M16 2v5"/><circle cx="8" cy="15" r="1.2"/><circle cx="12" cy="15" r="1.2"/><circle cx="16" cy="15" r="1.2"/></svg></span><span>ปฏิทิน</span></button>
+    <button class="nav-btn" data-view="exams"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/></svg></span><span>สอบ</span></button>
+    <button class="nav-btn" data-view="alerts"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></span><span>แจ้งเตือน</span></button>
+  </nav>
+</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

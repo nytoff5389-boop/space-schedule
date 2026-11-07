@@ -1,0 +1,33 @@
+name: ntfy notifications
+
+on:
+  schedule:
+    # 04:00 Bangkok (21:00 UTC). A second run at 05:45 Bangkok is a backup in case
+    # GitHub delays the first one; already-scheduled messages are skipped.
+    - cron: '0 21 * * *'
+    - cron: '45 22 * * *'
+  workflow_dispatch:
+    inputs:
+      test:
+        description: 'Send a test notification now'
+        type: boolean
+        default: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Send test notification
+        if: ${{ inputs.test }}
+        run: |
+          node -e '
+          const d = require("./data/schedule.json");
+          fetch(d.ntfy.server, { method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ topic: d.ntfy.topic, title: "🛸 ทดสอบระบบแจ้งเตือน", message: "เชื่อมต่อสำเร็จ! จะได้รับแจ้งเตือนตารางเรียนจากช่องทางนี้", priority: 4, click: d.siteUrl }) })
+            .then(r => console.log("status", r.status));'
+      - name: Schedule today's notifications
+        run: node notify/send.mjs
