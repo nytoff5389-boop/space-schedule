@@ -60,12 +60,11 @@ export const sfx = {
   tap() { if (!enabled) return; tone({ f0: 620, f1: 1240, dur: 0.11, vol: 0.22 }); tone({ type: 'triangle', f0: 1240, f1: 1560, t: 0.06, dur: 0.1, vol: 0.12 }); },
   /** sparkly chime when a page arrives */
   chime() { if (!enabled) return; [1046, 1318, 1568, 2093].forEach((f, i) => tone({ type: 'triangle', f0: f, t: 0.05 + i * 0.06, dur: 0.22, vol: 0.09 })); },
-  /** big bang + warp whoosh when switching functions */
+  /** engine whoosh when switching functions */
   warp() {
     if (!enabled) return;
-    tone({ f0: 140, f1: 38, dur: 0.6, vol: 0.4, attack: 0.01 });
-    noise({ dur: 0.9, vol: 0.18, from: 300, to: 5200, q: 0.9 });
-    tone({ type: 'sawtooth', f0: 220, f1: 880, t: 0.05, dur: 0.5, vol: 0.04 });
+    noise({ dur: 0.8, vol: 0.12, from: 250, to: 2600, q: 0.7 });
+    tone({ f0: 90, f1: 140, dur: 0.7, vol: 0.12, attack: 0.15 });
   },
   /** soft blip for day/month arrows */
   blip(dir = 1) { if (!enabled) return; tone({ type: 'sine', f0: dir > 0 ? 880 : 700, f1: dir > 0 ? 1320 : 520, dur: 0.12, vol: 0.18 }); },

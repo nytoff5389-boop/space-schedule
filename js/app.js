@@ -3,12 +3,14 @@ import {
   dayInfo, nextClassDay, examsOn, holidaysOn, eventsOn, buildNotifications, toDS, parseDS, termPhase,
 } from './core.js';
 import { sfx } from './sfx.js';
-import { warpJump, bigBang } from './space.js';
+import { warpJump } from './space.js';
+import { startShip } from './ship.js';
+import { startPlanets } from './planet.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const view = $('#view');
-const ship = $('#ship');
-const flash = $('#flash');
+const shipCanvas = $('#ship');
+let ship = null;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 let data;
@@ -268,17 +270,13 @@ function go(v, x, y) {
   state.view = v;
   if (changed) {
     sfx.warp();
-    flash.style.left = x + 'px'; flash.style.top = y + 'px';
-    flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go');
-    bigBang(x, y);
     warpJump();
-    ship.classList.remove('warp'); void ship.offsetWidth; ship.classList.add('warp');
-    setTimeout(() => sfx.chime(), 380);
+    if (ship) ship.maneuver();
+    setTimeout(() => sfx.chime(), 420);
   }
   render(true);
   window.scrollTo({ top: 0, behavior: changed ? 'auto' : 'smooth' });
 }
-ship.addEventListener('animationend', (e) => { if (e.animationName === 'dodge') ship.classList.remove('warp'); });
 
 function ripple(el, x, y) {
   const r = el.getBoundingClientRect();
@@ -368,6 +366,8 @@ async function init() {
   const res = await fetch('data/schedule.json', { cache: 'no-cache' });
   data = await res.json();
   updateSoundBtn();
+  try { startPlanets($('#planets')); } catch (e) { console.warn(e); }
+  try { ship = startShip(shipCanvas); } catch (e) { console.warn(e); }
   tick();
   render(true);
   setInterval(tick, 1000);

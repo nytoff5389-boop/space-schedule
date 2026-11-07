@@ -19,3 +19,8 @@ GitHub Actions (`.github/workflows/notify.yml`) รันทุกเช้า 0
 - ห้อง Lab กำหนดใน `labRooms`
 
 ดูตัวอย่างแจ้งเตือนของวันใดก็ได้: `DATE=2026-11-12 DRY=1 node notify/send.mjs`
+
+## ภาพ
+- โลกและเมฆ/ไฟเมือง: texture จาก three.js examples (ข้อมูลต้นฉบับ NASA Blue Marble) เรนเดอร์สดด้วย WebGL (`js/planet.js`)
+- ทางช้างเผือก: three.js examples MilkyWay cubemap
+- ยานอวกาศ: เรนเดอร์สดด้วย ray-marching shader (`js/ship.js`) ไม่ใช้ไฟล์ภาพ
