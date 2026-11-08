@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>เตรียมบทเทศนา</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pridi:wght@500;600&family=Sarabun:wght@400;600;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+<style>
+body{margin:0}
+/* Layout: one calm column, a sunrise banner with the cross and Jesus, a numbered path of 7 steps, big tap targets */
+:root{
+  --bg:#F5F9FF; --surface:#FFFFFF; --ink:#1B2A47; --muted:#4F5F7D;
+  --sky:#2A66B0; --sky-ink:#FFFFFF; --sky-soft:#E2EDFB; --gold:#B9820F; --gold-soft:#FFF3D6;
+  --line:#CBD8EC; --ok:#1E7A4C; --ok-soft:#E1F5EA; --warn:#9A5B00; --warn-soft:#FFF1D9; --err:#B3261E;
+  --banner-a:#FFF6DD; --banner-b:#DCEBFF; --robe:#FFFFFF; --robe-line:#C9D6EA; --sash:#B93A32;
+  --display:"Pridi", "Sarabun", Georgia, serif; --body:"Sarabun", "Leelawadee UI", Tahoma, sans-serif;
+  --fs:20px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121A2B; --surface:#1A2439; --ink:#EEF3FC; --muted:#AAB7D0;
+  --sky:#7FB2F0; --sky-ink:#0E1730; --sky-soft:#22345A; --gold:#F0C25A; --gold-soft:#3A3120;
+  --line:#33456A; --ok:#7FD8A6; --ok-soft:#1C3A2C; --warn:#F3C06B; --warn-soft:#3B2E17; --err:#FF8A80;
+  --banner-a:#2B2A3A; --banner-b:#1B2C4D; --robe:#E9EEF7; --robe-line:#8C9AB5; --sash:#C9564E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121A2B; --surface:#1A2439; --ink:#EEF3FC; --muted:#AAB7D0;
+  --sky:#7FB2F0; --sky-ink:#0E1730; --sky-soft:#22345A; --gold:#F0C25A; --gold-soft:#3A3120;
+  --line:#33456A; --ok:#7FD8A6; --ok-soft:#1C3A2C; --warn:#F3C06B; --warn-soft:#3B2E17; --err:#FF8A80;
+  --banner-a:#2B2A3A; --banner-b:#1B2C4D; --robe:#E9EEF7; --robe-line:#8C9AB5; --sash:#C9564E; color-scheme:dark}
+html{font-size:var(--fs)}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:1rem;line-height:1.7}
+*{box-sizing:border-box}
+.wrap{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 3rem}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.3;text-wrap:balance;margin:0}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* banner */
+.banner{background:linear-gradient(160deg,var(--banner-a),var(--banner-b));border-bottom:1px solid var(--line)}
+.banner .wrap{display:flex;align-items:center;gap:1rem;padding-block:.8rem .6rem}
+.banner svg{width:112px;height:auto;flex:none}
+.brand{flex:1;min-width:0}
+.brand h1{font-size:1.7rem;color:var(--ink)}
+.brand p{margin:.1rem 0 0;color:var(--muted);font-size:.95rem}
+.tools{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end}
+.chip{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:.35rem .9rem;font-weight:600;min-height:48px}
+.chip[aria-pressed="false"]{color:var(--muted)}
+
+/* stepper */
+.steps{display:flex;gap:.4rem;overflow-x:auto;padding:.9rem 0 .4rem;margin:0;list-style:none;scrollbar-width:thin}
+.steps li{flex:none}
+.steps button{display:flex;align-items:center;gap:.45rem;border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:.35rem .7rem;min-height:52px;font-size:.85rem;color:var(--muted)}
+.steps .n{display:inline-grid;place-items:center;width:1.7rem;height:1.7rem;border-radius:50%;background:var(--sky-soft);color:var(--sky);font-weight:700}
+.steps .done .n{background:var(--ok);color:var(--surface)}
+.steps .cur button{border-color:var(--sky);color:var(--ink);font-weight:700}
+.steps .cur .n{background:var(--sky);color:var(--sky-ink)}
+.steps button:disabled{opacity:.55;cursor:not-allowed}
+
+/* stage */
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:1.4rem clamp(1rem,3vw,2rem);margin-top:.6rem;display:grid;gap:1.1rem}
+.eyebrow{color:var(--gold);font-weight:700;letter-spacing:.04em;font-size:.85rem}
+.stage h2{font-size:1.55rem}
+.hint{color:var(--muted);margin:0}
+label.lb{font-weight:700;display:block;margin-bottom:.35rem}
+.row{display:flex;gap:.8rem;flex-wrap:wrap;align-items:flex-end}
+.row>*{min-width:0}
+select,input[type=text]{border:2px solid var(--line);background:var(--bg);border-radius:12px;padding:.5rem .8rem;min-height:56px;font-size:1.05rem}
+textarea{width:100%;border:2px solid var(--line);background:var(--bg);border-radius:12px;padding:.8rem 1rem;line-height:1.75;resize:vertical;min-height:7rem}
+input[type=text]{width:100%}
+textarea:focus,select:focus,input:focus{border-color:var(--sky);outline:none}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:58px;padding:.5rem 1.4rem;border-radius:14px;border:2px solid var(--sky);background:var(--surface);color:var(--sky);font-weight:700;font-size:1.05rem;text-decoration:none}
+.btn.primary{background:var(--sky);color:var(--sky-ink)}
+.btn.gold{border-color:var(--gold);color:var(--gold);background:var(--gold-soft)}
+.btn.ghost{border-color:var(--line);color:var(--muted)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.actions{display:flex;gap:.8rem;flex-wrap:wrap;justify-content:space-between;border-top:1px dashed var(--line);padding-top:1.1rem}
+
+/* pickers */
+.picker{border:2px solid var(--line);border-radius:16px;padding:.8rem;display:grid;gap:.6rem;background:var(--bg)}
+.tabs{display:flex;gap:.5rem}
+.tabs button{flex:1;min-height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface);font-weight:700}
+.tabs button[aria-selected="true"]{border-color:var(--sky);background:var(--sky-soft);color:var(--sky)}
+.grid{display:grid;gap:.45rem;grid-template-columns:repeat(auto-fill,minmax(9.5rem,1fr));max-height:20rem;overflow:auto;padding:.1rem}
+.grid.nums{grid-template-columns:repeat(auto-fill,minmax(3.4rem,1fr));max-height:14rem}
+.grid button{min-height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface);font-size:1rem;padding:.2rem .4rem}
+.grid button[aria-pressed="true"]{background:var(--sky);border-color:var(--sky);color:var(--sky-ink);font-weight:700}
+.refbig{font-family:var(--display);font-size:1.6rem;color:var(--sky)}
+.quote{border-left:6px solid var(--gold);background:var(--gold-soft);border-radius:0 14px 14px 0;padding:.9rem 1.1rem;font-size:1.08rem}
+.quote cite{display:block;font-style:normal;font-weight:700;color:var(--gold);margin-top:.3rem}
+.how{background:var(--sky-soft);border-radius:14px;padding:.8rem 1rem;margin:0}
+.how ol{margin:.2rem 0 0;padding-left:1.4rem}
+
+/* options */
+.opts{display:grid;gap:.7rem}
+.opt{display:grid;grid-template-columns:auto 1fr;gap:.8rem;align-items:start;text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:16px;padding:.9rem 1rem;line-height:1.7}
+.opt .dot{width:1.9rem;height:1.9rem;border-radius:50%;border:3px solid var(--line);display:grid;place-items:center;font-weight:700;color:var(--muted);font-size:.85rem;margin-top:.15rem}
+.opt[aria-pressed="true"]{border-color:var(--sky);background:var(--sky-soft)}
+.opt[aria-pressed="true"] .dot{border-color:var(--sky);background:var(--sky);color:var(--sky-ink)}
+.point{border:2px solid var(--line);border-radius:18px;padding:1rem;display:grid;gap:.8rem}
+.point h3{font-size:1.25rem;color:var(--sky)}
+.pointhead{display:flex;justify-content:space-between;gap:.6rem;align-items:center;flex-wrap:wrap}
+.sub{font-weight:700;color:var(--gold)}
+.qrow{display:grid;gap:.4rem;border:2px solid var(--line);border-radius:16px;padding:.8rem}
+
+/* notices */
+.note{border-radius:14px;padding:.8rem 1rem;margin:0}
+.note.warn{background:var(--warn-soft);color:var(--warn)}
+.note.err{background:var(--warn-soft);color:var(--err)}
+.note.ok{background:var(--ok-soft);color:var(--ok)}
+.busy{display:flex;gap:1rem;align-items:center;background:var(--sky-soft);border-radius:16px;padding:1rem 1.1rem;flex-wrap:wrap}
+.busy svg{width:42px;height:42px;flex:none;animation:glow 1.6s ease-in-out infinite}
+.busy p{margin:0;flex:1;min-width:12rem}
+@keyframes glow{50%{opacity:.45;transform:scale(.92)}}
+@media (prefers-reduced-motion:reduce){.busy svg{animation:none}}
+
+/* preview doc */
+.doc{border:1px solid var(--line);border-radius:14px;padding:1.4rem clamp(1rem,3vw,2rem);background:var(--bg);line-height:1.8}
+.doc h1{font-size:1.5rem}
+.doc h2{font-size:1.2rem;margin-top:1.2rem;color:var(--sky)}
+.doc h3{font-size:1.08rem;margin-top:.9rem}
+.doc p{margin:.4rem 0;text-indent:2.2em}
+.doc p.noind{text-indent:0}
+.doc ul{margin:.3rem 0;padding-left:1.4rem}
+.confirmbox{border:2px solid var(--err);border-radius:14px;padding:.9rem 1rem;display:grid;gap:.6rem}
+.foot{color:var(--muted);font-size:.8rem;text-align:center;margin-top:1.4rem}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:560px){
+  .banner .wrap{flex-wrap:wrap}
+  .banner svg{width:72px}
+  .brand h1{font-size:1.45rem}
+  .tools{flex-basis:100%;justify-content:flex-start}
+  .tools .chip{flex:1}
+  .brand p{display:none}
+  .actions .btn{flex:1 1 100%}
+}
+</style>
+
+</head>
+<body>
+<header class="banner">
+  <div class="wrap">
+    <svg viewBox="0 0 200 220" role="img" aria-label="พระเยซูทรงกางพระหัตถ์หน้าไม้กางเขน">
+      <g stroke="var(--gold)" stroke-width="3" stroke-linecap="round" opacity=".55">
+        <line x1="100" y1="60" x2="100" y2="2"/><line x1="100" y1="60" x2="40" y2="10"/><line x1="100" y1="60" x2="160" y2="10"/>
+        <line x1="100" y1="60" x2="8" y2="50"/><line x1="100" y1="60" x2="192" y2="50"/><line x1="100" y1="60" x2="15" y2="95"/><line x1="100" y1="60" x2="185" y2="95"/>
+      </g>
+      <rect x="92" y="6" width="16" height="210" rx="3" fill="var(--gold)"/>
+      <rect x="44" y="40" width="112" height="15" rx="3" fill="var(--gold)"/>
+      <circle cx="100" cy="58" r="25" fill="var(--gold-soft)" stroke="var(--gold)" stroke-width="3"/>
+      <path d="M100 98 C82 98 76 104 64 112 L26 132 C20 136 22 145 30 143 L68 130 L58 214 L142 214 L132 130 L170 143 C178 145 180 136 174 132 L136 112 C124 104 118 98 100 98Z" fill="var(--robe)" stroke="var(--robe-line)" stroke-width="2"/>
+      <path d="M118 102 L88 214 L104 214 L130 110Z" fill="var(--sash)" opacity=".9"/>
+      <circle cx="26" cy="139" r="6" fill="#E7B98F"/><circle cx="174" cy="139" r="6" fill="#E7B98F"/>
+      <path d="M80 60 C80 38 120 38 120 60 L122 96 L110 92 L100 100 L90 92 L78 96Z" fill="#6B4528"/>
+      <ellipse cx="100" cy="62" rx="14" ry="17" fill="#E7B98F"/>
+      <path d="M86 66 C88 86 112 86 114 66 C110 76 90 76 86 66Z" fill="#6B4528"/>
+    </svg>
+    <div class="brand">
+      <h1>เตรียมบทเทศนา</h1>
+      <p>สร้างบทเรียนพระคัมภีร์ทีละขั้น จากพระคริสตธรรมคัมภีร์ ฉบับมาตรฐาน (THSV11)</p>
+    </div>
+    <div class="tools">
+      <button class="chip" id="sndBtn" aria-pressed="true">🔔 เสียง</button>
+      <button class="chip" id="aiBtn" hidden>⚙ ตั้งค่า AI</button>
+      <button class="chip" id="fsBtn" aria-label="ปรับขนาดตัวอักษร">ก ขนาดตัวอักษร</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <ol class="steps" id="steps" aria-label="ขั้นตอน"></ol>
+  <section class="stage" id="aiPanel" hidden>
+    <div><div class="eyebrow">ตั้งค่าระบบช่วยคิด</div><h2>ใส่รหัส Claude API ของคุณ</h2>
+    <p class="hint">ระบบช่วยคิดคำนำ บริบท บทเรียน บทสรุป และคำถาม ต้องใช้รหัส API ของ Anthropic รหัสนี้เก็บไว้ในเครื่องนี้เท่านั้น ไม่ถูกส่งไปที่อื่นนอกจาก Anthropic</p></div>
+    <ol class="how" style="padding-left:2.2rem"><li>สมัครและเติมเงินที่ <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a></li><li>กด Create Key แล้วคัดลอกรหัสที่ขึ้นต้นด้วย sk-ant-</li><li>วางในช่องด้านล่างแล้วกดบันทึก</li></ol>
+    <div><label class="lb" for="keyIn">รหัส API</label><input type="text" id="keyIn" autocomplete="off" spellcheck="false" placeholder="sk-ant-..."></div>
+    <div class="row"><button class="btn primary" id="keySave">บันทึกรหัส</button><button class="btn ghost" id="keyDel">ลบรหัส</button><button class="btn ghost" id="keyClose">ปิด</button></div>
+    <p class="note" id="keyMsg" hidden></p>
+  </section>
+  <section class="stage" id="stage" aria-live="polite"></section>
+  <p class="foot">ข้อความพระคัมภีร์: พระคริสตธรรมคัมภีร์ ฉบับมาตรฐาน 2011 © สมาคมพระคริสตธรรมไทย · เปิดอ่านได้ที่ bible.com</p>
+</main>
+
+<script>
+/* ---------- Bible data ---------- */
+const BOOKS=[["GEN","ปฐมกาล"],["EXO","อพยพ"],["LEV","เลวีนิติ"],["NUM","กันดารวิถี"],["DEU","เฉลยธรรมบัญญัติ"],["JOS","โยชูวา"],["JDG","ผู้วินิจฉัย"],["RUT","นางรูธ"],["1SA","1 ซามูเอล"],["2SA","2 ซามูเอล"],["1KI","1 พงศ์กษัตริย์"],["2KI","2 พงศ์กษัตริย์"],["1CH","1 พงศาวดาร"],["2CH","2 พงศาวดาร"],["EZR","เอสรา"],["NEH","เนหะมีย์"],["EST","เอสเธอร์"],["JOB","โยบ"],["PSA","สดุดี"],["PRO","สุภาษิต"],["ECC","ปัญญาจารย์"],["SNG","เพลงซาโลมอน"],["ISA","อิสยาห์"],["JER","เยเรมีย์"],["LAM","เพลงคร่ำครวญ"],["EZK","เอเสเคียล"],["DAN","ดาเนียล"],["HOS","โฮเชยา"],["JOL","โยเอล"],["AMO","อาโมส"],["OBA","โอบาดีห์"],["JON","โยนาห์"],["MIC","มีคาห์"],["NAM","นาฮูม"],["HAB","ฮาบากุก"],["ZEP","เศฟันยาห์"],["HAG","ฮักกัย"],["ZEC","เศคาริยาห์"],["MAL","มาลาคี"],["MAT","มัทธิว"],["MRK","มาระโก"],["LUK","ลูกา"],["JHN","ยอห์น"],["ACT","กิจการ"],["ROM","โรม"],["1CO","1 โครินธ์"],["2CO","2 โครินธ์"],["GAL","กาลาเทีย"],["EPH","เอเฟซัส"],["PHP","ฟีลิปปี"],["COL","โคโลสี"],["1TH","1 เธสะโลนิกา"],["2TH","2 เธสะโลนิกา"],["1TI","1 ทิโมธี"],["2TI","2 ทิโมธี"],["TIT","ทิตัส"],["PHM","ฟีเลโมน"],["HEB","ฮีบรู"],["JAS","ยากอบ"],["1PE","1 เปโตร"],["2PE","2 เปโตร"],["1JN","1 ยอห์น"],["2JN","2 ยอห์น"],["3JN","3 ยอห์น"],["JUD","ยูดา"],["REV","วิวรณ์"]];
+const VC=[[31,25,24,26,32,22,24,22,29,32,32,20,18,24,21,16,27,33,38,18,34,24,20,67,34,35,46,22,35,43,55,32,20,31,29,43,36,30,23,23,57,38,34,34,28,34,31,22,33,26],[22,25,22,31,23,30,25,32,35,29,10,51,22,31,27,36,16,27,25,26,36,31,33,18,40,37,21,43,46,38,18,35,23,35,35,38,29,31,43,38],[17,16,17,35,19,30,38,36,24,20,47,8,59,57,33,34,16,30,37,27,24,33,44,23,55,46,34],[54,34,51,49,31,27,89,26,23,36,35,16,33,45,41,50,13,32,22,29,35,41,30,25,18,65,23,31,40,16,54,42,56,29,34,13],[46,37,29,49,33,25,26,20,29,22,32,32,18,29,23,22,20,22,21,20,23,30,25,22,19,19,26,68,29,20,30,52,29,12],[18,24,17,24,15,27,26,35,27,43,23,24,33,15,63,10,18,28,51,9,45,34,16,33],[36,23,31,24,31,40,25,35,57,18,40,15,25,20,20,31,13,31,30,48,25],[22,23,18,22],[28,36,21,22,12,21,17,22,27,27,15,25,23,52,35,23,58,30,24,42,15,23,29,22,44,25,12,25,11,31,13],[27,32,39,12,25,23,29,18,13,19,27,31,39,33,37,23,29,33,43,26,22,51,39,25],[53,46,28,34,18,38,51,66,28,29,43,33,34,31,34,34,24,46,21,43,29,53],[18,25,27,44,27,33,20,29,37,36,21,21,25,29,38,20,41,37,37,21,26,20,37,20,30],[54,55,24,43,26,81,40,40,44,14,47,40,14,17,29,43,27,17,19,8,30,19,32,31,31,32,34,21,30],[17,18,17,22,14,42,22,18,31,19,23,16,22,15,19,14,19,34,11,37,20,12,21,27,28,23,9,27,36,27,21,33,25,33,27,23],[11,70,13,24,17,22,28,36,15,44],[11,20,32,23,19,19,73,18,38,39,36,47,31],[22,23,15,17,14,14,10,17,32,3],[22,13,26,21,27,30,21,22,35,22,20,25,28,22,35,22,16,21,29,29,34,30,17,25,6,14,23,28,25,31,40,22,33,37,16,33,24,41,30,24,34,17],[6,12,8,8,12,10,17,9,20,18,7,8,6,7,5,11,15,50,14,9,13,31,6,10,22,12,14,9,11,12,24,11,22,22,28,12,40,22,13,17,13,11,5,26,17,11,9,14,20,23,19,9,6,7,23,13,11,11,17,12,8,12,11,10,13,20,7,35,36,5,24,20,28,23,10,12,20,72,13,19,16,8,18,12,13,17,7,18,52,17,16,15,5,23,11,13,12,9,9,5,8,28,22,35,45,48,43,13,31,7,10,10,9,8,18,19,2,29,176,7,8,9,4,8,5,6,5,6,8,8,3,18,3,3,21,26,9,8,24,13,10,7,12,15,21,10,20,14,9,6],[33,22,35,27,23,35,27,36,18,32,31,28,25,35,33,33,28,24,29,30,31,29,35,34,28,28,27,28,27,33,31],[18,26,22,16,20,12,29,17,18,20,10,14],[17,17,11,16,16,13,13,14],[31,22,26,6,30,13,25,22,21,34,16,6,22,32,9,14,14,7,25,6,17,25,18,23,12,21,13,29,24,33,9,20,24,17,10,22,38,22,8,31,29,25,28,28,25,13,15,22,26,11,23,15,12,17,13,12,21,14,21,22,11,12,19,12,25,24],[19,37,25,31,31,30,34,22,26,25,23,17,27,22,21,21,27,23,15,18,14,30,40,10,38,24,22,17,32,24,40,44,26,22,19,32,21,28,18,16,18,22,13,30,5,28,7,47,39,46,64,34],[22,22,66,22,22],[28,10,27,17,17,14,27,18,11,22,25,28,23,23,8,63,24,32,14,49,32,31,49,27,17,21,36,26,21,26,18,32,33,31,15,38,28,23,29,49,26,20,27,31,25,24,23,35],[21,49,30,37,31,28,28,27,27,21,45,13],[11,23,5,19,15,11,16,14,17,15,12,14,16,9],[20,32,21],[15,16,15,13,27,14,17,14,15],[21],[17,10,10,11],[16,13,12,13,15,16,20],[15,13,19],[17,20,19],[18,15,20],[15,23],[21,13,10,14,11,15,14,23,17,12,17,14,9,21],[14,17,18,6],[25,23,17,25,48,34,29,34,38,42,30,50,58,36,39,28,27,35,30,34,46,46,39,51,46,75,66,20],[45,28,35,41,43,56,37,38,50,52,33,44,37,72,47,20],[80,52,38,44,39,49,50,56,62,42,54,59,35,35,32,31,37,43,48,47,38,71,56,53],[51,25,36,54,47,71,53,59,41,42,57,50,38,31,27,33,26,40,42,31,25],[26,47,26,37,42,15,60,40,43,48,30,25,52,28,41,40,34,28,41,38,40,30,35,27,27,32,44,31],[32,29,31,25,21,23,25,39,33,21,36,21,14,23,33,27],[31,16,23,21,13,20,40,13,27,33,34,31,13,40,58,24],[24,17,18,18,21,18,16,24,15,18,33,21,14],[24,21,29,31,26,18],[23,22,21,32,33,24],[30,30,21,23],[29,23,25,18],[10,20,13,18,28],[12,17,18],[20,15,16,16,25,21],[18,26,17,22],[16,15,15],[25],[14,18,19,16,14,20,28,13,28,39,40,29,25],[27,26,18,17,20],[25,25,22,19,14],[21,22,18],[10,29,24,21,21],[13],[14],[25],[20,29,22,11,14,17,17,13,21,11,19,17,18,20,8,21,18,24,21,15,27,21]];
+const bIdx=c=>BOOKS.findIndex(b=>b[0]===c);
+const bName=c=>BOOKS[bIdx(c)][1];
+
+/* ---------- Sample lesson (style reference + offline demo) ---------- */
+const STYLE_SAMPLE="# บทเรียน: พระธรรมกิจการ บทที่ 19\n**หัวข้อ:** ฤทธิ์เดชของพระวิญญาณบริสุทธิ์และการพลิกฟื้นเมืองเอเฟซัส\n\n## ข้อพระคัมภีร์หลัก (Key Verse)\n> \"พระเจ้าทรงทำอัศจรรย์อันไม่ธรรมดาด้วยมือของเปาโล จนกระทั่งเขาเอาผ้าเช็ดหน้าและผ้ากันเปื้อนจากตัวเปาโลไปวางที่ผู้ป่วย โรคต่างๆ ของเขาก็หายและพวกวิญญาณชั่วก็ออกจากตัวเขา\" — กิจการ 19:11-12\n\n## คำนำ (Introduction)\n\tในยุคปัจจุบัน เรามักจะเห็นการต่อสู้ระหว่างความเชื่อในพระเจ้ากับกระแสโลก ไม่ว่าจะเป็นเรื่องไสยศาสตร์ เงินทอง หรือลัทธิต่างๆ หลายครั้งคริสเตียนอาจรู้สึกว่าเรากำลังเผชิญหน้ากับอำนาจที่ยิ่งใหญ่เกินตัว พระธรรมกิจการบทที่ 19 จะนำเราไปดูเหตุการณ์ที่เมืองเอเฟซัส ศูนย์กลางแห่งไสยศาสตร์และรูปเคารพในยุคโบราณ เพื่อให้เราได้เห็นว่า เมื่อฤทธิ์เดชของพระเจ้าและพระวจนะของพระองค์ดำเนินไป ไม่มีอำนาจมืดหรือระบบใดในโลกที่จะต้านทานได้\n\n## บริบทก่อนหน้านี้ (Background & Context)\n\tก่อนจะมาถึงบทที่ 19 อัครทูตเปาโลได้เดินทางประกาศทางมิชชันนารีรอบที่ 2 (กิจการ 15:36 - 18:22) และได้เริ่มออกเดินทางรอบที่ 3 (กิจการ 18:23) ในบทที่ 18 เปาโลได้แวะที่เมืองเอเฟซัสช่วงสั้นๆ และสัญญาว่าจะกลับมาอีกหากเป็นพระประสงค์ของพระเจ้า (กิจการ 18:21) ขณะเดียวกัน อปอลโล ผู้มีโวหารดีก็ได้รับคำแนะนำเรื่องทางของพระเจ้าอย่างถูกต้องยิ่งขึ้นจากปริสคิลลาและอาควิลลาที่เมืองเอเฟซัส ก่อนที่เขาจะเดินทางต่อไปยังแคว้นอาคายา ดังนั้น ในบทที่ 19 นี้ เปาโลจึงได้กลับมาที่เมืองเอเฟซัสตามสัญญา เพื่อเริ่มต้นพันธกิจที่ยิ่งใหญ่และยาวนานถึง 3 ปี\n\n## เนื้อหาบทเรียน (Lesson Outline)\n\n### ประการที่ 1: การรับพระวิญญาณบริสุทธิ์และความเข้าใจที่ถูกต้องในพระวจนะ\n\tเมื่อเปาโลมาถึงเมืองเอเฟซัส เขาพบศิษย์บางคนที่ยังรู้จักเพียงแค่ \"บัพติศมาของยอห์น\" (ซึ่งเล็งถึงการกลับใจใหม่) เปาโลจึงได้วางมือและนำพวกเขาให้รับบัพติศมาในพระนามของพระเยซูคริสต์ และรับพระวิญญาณบริสุทธิ์ นอกจากนี้เปาโลยังใช้เวลาสั่งสอนในธรรมศาลาและในห้องประชุมของทิรันนัสอย่างสม่ำเสมอ จนพระวจนะแพร่กระจายไปทั่วแคว้นเอเชีย\n* **ข้อพระคัมภีร์สนับสนุน:** กิจการ 19:1-10\n* **บทเรียนสำหรับเรา:** คริสเตียนไม่เพียงแต่กลับใจใหม่เท่านั้น แต่ต้องพึ่งพาฤทธิ์เดชของพระวิญญาณบริสุทธิ์ และยอมจำนนต่อการสัตย์ซื่อในการศึกษาพระวจนะของพระเจ้า เพื่อชีวิตฝ่ายวิญญาณจะเติบโตอย่างถูกต้อง\n\n### ประการที่ 2: ฤทธิ์เดชที่แท้จริงกับการกลับใจที่หักรากถอนโคน\n\tพระเจ้าทรงทำการอัศจรรย์ผ่านเปาโลอย่างมาก จนกระทั่งพวกยิวบางคนที่หากินกับการขับผีพยายามเลียนแบบโดยใช้พระนามของพระเยซู (บุตรทั้งเจ็ดของสเควา) แต่กลับถูกผีทำร้ายจนต้องหนีเตลิดไป เหตุการณ์นี้ทำให้คนทั้งเมืองเกิดความเกรงกลัวพระเจ้า คนที่เชื่อแล้วจึงนำหนังสือคาถาอาคมของตนมาเผาทิ้งรวมกันเป็นมูลค่ามหาศาล\n* **ข้อพระคัมภีร์สนับสนุน:** กิจการ 19:11-20\n* **บทเรียนสำหรับเรา:** พระนามของพระเยซูคริสต์ไม่ใช่ \"คาถา\" หรือเครื่องรางที่เราจะนำมาใช้ตามใจชอบ การกลับใจใหม่ที่แท้จริงต้องนำไปสู่การละทิ้งสิ่งชั่วร้ายและรูปเคารพฝ่ายวิญญาณในอดีตอย่างสิ้นเชิง โดยไม่เสียดายคุณค่าทางโลก\n\n### ประการที่ 3: การปะทะกันระหว่างอาณาจักรของพระเจ้ากับผลประโยชน์ของโลก\n\tเมื่อพระกิตติคุณขยายใหญ่ขึ้น ระบบรูปเคารพของเมืองเอเฟซัสก็เริ่มสั่นคลอน เดเมตริอุสช่างเงินผู้ทำรูปจำลองวิหารพระแม่ไดอานา (อาร์เทมิส) เสียผลประโยชน์ จึงได้ระดมฝูงชนก่อจลาจลต่อต้านเปาโลและพวกพ้อง เหตุการณ์วุ่นวายอย่างมากจนเจ้าหน้าที่เมืองต้องเข้ามาควบคุมและสลายการชุมนุม\n* **ข้อพระคัมภีร์สนับสนุน:** กิจการ 19:23-41\n* **บทเรียนสำหรับเรา:** เมื่อเราดำเนินชีวิตตามทางของพระเจ้าอย่างจริงจัง เราอาจต้องเผชิญกับการต่อต้านจากค่านิยมของโลกหรือผู้ที่เสียผลประโยชน์ แต่จงมั่นใจว่าพระเจ้าทรงควบคุมทุกสถานการณ์ และพระองค์จะทรงปกป้องผู้รับใช้ของพระองค์เสมอ\n\n## บทสรุปท้าทายและหนุนใจ (Conclusion & Encouragement)\n\tพระธรรมกิจการบทที่ 19 สำแดงให้เราเห็นว่า \"พระวจนะขององค์พระผู้เป็นเจ้าก็เจริญขึ้นและมีชัยชนะอย่างยิ่งใหญ่\" (ข้อ 20) เมืองเอเฟซัสที่เคยเต็มไปด้วยไสยศาสตร์และอำนาจมืด กลับถูกพลิกฟื้นด้วยฤทธิ์เดชของพระวิญญาณบริสุทธิ์และการประกาศพระวจนะอย่างสัตย์ซื่อ\n\tขอให้เรามั่นใจว่า ไม่ว่าสถานการณ์รอบตัวเราจะดูมืดมน หรือมีกระแสโลกที่ต่อต้านความเชื่อฝ่ายวิญญาณมากเพียงใด พระเจ้าของเราทรงยิ่งใหญ่กว่า ขอนำหัวใจที่พึ่งพาพระวิญญาณบริสุทธิ์ และความกล้าหาญที่จะละทิ้งสิ่งเก่าๆ มาเป็นพลังขับเคลื่อนชีวิตของเราในวันนี้\n\n## คำถามท้าทายและเสริมหนุนผู้เรียน (Discussion Questions)\n* **สำรวจชีวิตฝ่ายวิญญาณ:** ในปัจจุบัน มี \"บัพติศมาของยอห์น\" หรือสิ่งใดในชีวิตที่เรายังยึดติดอยู่ และเราได้เปิดใจพึ่งพาฤทธิ์เดชและการทรงนำของพระวิญญาณบริสุทธิ์ในทุกๆ วันแล้วหรือยัง?\n* **การกลับใจที่แท้จริง:** เมื่อคิดถึงเหตุการณ์ที่ชาวเอเฟซัสเผาหนังสือคาถาอาคมราคาแพง มี \"รูปเคารพ\" หรือ \"สิ่งของ/พฤติกรรมในอดีต\" ใดในชีวิตของเราที่พระเจ้ากำลังท้าทายให้เรายอมตัดขาดและทิ้งไปอย่างเด็ดขาดในวันนี้บ้าง?\n* **การยืนหยัดท่ามกลางการต่อต้าน:** หากการดำเนินชีวิตคริสเตียนที่สัตย์ซื่อทำให้คุณต้องขัดแย้งกับผลประโยชน์ หรือกระแสสังคมรอบข้าง (เหมือนที่เปาโลเผชิญกับช่างเงิน) คุณจะยึดหลักการใดในพระคัมภีร์บทนี้เพื่อช่วยให้คุณยืนหยัดต่อไปได้?";
+const DEMO_KEY="ACT|19|11|12";
+const DEMO_VERSE="พระเจ้าทรงทำอัศจรรย์อันไม่ธรรมดาด้วยมือของเปาโล จนกระทั่งเขาเอาผ้าเช็ดหน้าและผ้ากันเปื้อนจากตัวเปาโลไปวางที่ผู้ป่วย โรคต่างๆ ของเขาก็หายและพวกวิญญาณชั่วก็ออกจากตัวเขา";
+const DEMO={
+ intros:[
+  "ในยุคปัจจุบัน เรามักจะเห็นการต่อสู้ระหว่างความเชื่อในพระเจ้ากับกระแสโลก ไม่ว่าจะเป็นเรื่องไสยศาสตร์ เงินทอง หรือลัทธิต่างๆ หลายครั้งคริสเตียนอาจรู้สึกว่าเรากำลังเผชิญหน้ากับอำนาจที่ยิ่งใหญ่เกินตัว พระธรรมกิจการบทที่ 19 จะนำเราไปดูเหตุการณ์ที่เมืองเอเฟซัส ศูนย์กลางแห่งไสยศาสตร์และรูปเคารพในยุคโบราณ เพื่อให้เราได้เห็นว่า เมื่อฤทธิ์เดชของพระเจ้าและพระวจนะของพระองค์ดำเนินไป ไม่มีอำนาจมืดหรือระบบใดในโลกที่จะต้านทานได้",
+  "เคยไหมที่เราสงสัยว่า พระเจ้าองค์เดียวกับที่ทรงทำการอัศจรรย์ในพระคัมภีร์ ยังทรงทำงานในชีวิตของเราทุกวันนี้หรือไม่ พระธรรมกิจการบทที่ 19 บันทึกว่าพระเจ้าทรงทำอัศจรรย์อันไม่ธรรมดาด้วยมือของเปาโลที่เมืองเอเฟซัส เมืองที่ผู้คนผูกพันกับเวทมนตร์และรูปเคารพ วันนี้เราจะมาเรียนรู้ว่าฤทธิ์เดชของพระเจ้าเปลี่ยนทั้งชีวิตคนและทั้งเมืองได้อย่างไร",
+  "ในสังคมไทย หลายคนยังพกเครื่องราง ดูดวง หรือพึ่งพาสิ่งศักดิ์สิทธิ์เพื่อความสบายใจ เมืองเอเฟซัสในสมัยของเปาโลก็ไม่ต่างกัน ผู้คนในเมืองนั้นพึ่งพาคาถาอาคมและรูปเคารพ แต่เมื่อพระวจนะของพระเจ้ามาถึง ชีวิตของพวกเขาก็เปลี่ยนไปอย่างสิ้นเชิง พระธรรมกิจการบทที่ 19 จะสอนเราว่าฤทธิ์เดชที่แท้จริงมาจากพระเจ้าเพียงผู้เดียว",
+  "ถ้าวันนี้เราต้องเลือกระหว่างสิ่งของราคาแพงที่เคยผูกมัดชีวิต กับการติดตามพระเยซูคริสต์อย่างสุดใจ เราจะเลือกอะไร ชาวเอเฟซัสที่เชื่อในพระเจ้าได้ตัดสินใจนำหนังสือคาถาอาคมมูลค่ามหาศาลมาเผาต่อหน้าผู้คน พระธรรมกิจการบทที่ 19 จะพาเราไปดูว่าอะไรทำให้พวกเขากล้าตัดสินใจเช่นนั้น และฤทธิ์เดชของพระเจ้าทำงานอย่างไรเมื่อพระวจนะดำเนินไป",
+  "การเปลี่ยนแปลงที่ยิ่งใหญ่มักเริ่มจากความสัตย์ซื่อในสิ่งเล็กๆ เปาโลใช้เวลาสั่งสอนในห้องประชุมของทิรันนัสทุกวันเป็นเวลาสองปี จนชาวแคว้นเอเชียทั้งหมดได้ยินพระวจนะขององค์พระผู้เป็นเจ้า พระธรรมกิจการบทที่ 19 จะเปิดให้เราเห็นว่า เมื่อผู้รับใช้สัตย์ซื่อต่อพระวจนะ พระเจ้าก็ทรงสำแดงฤทธิ์เดชของพระองค์อย่างไม่ธรรมดา"],
+ background:"ก่อนจะมาถึงบทที่ 19 อัครทูตเปาโลได้เดินทางประกาศทางมิชชันนารีรอบที่ 2 (กิจการ 15:36 - 18:22) และได้เริ่มออกเดินทางรอบที่ 3 (กิจการ 18:23) ในบทที่ 18 เปาโลได้แวะที่เมืองเอเฟซัสช่วงสั้นๆ และสัญญาว่าจะกลับมาอีกหากเป็นพระประสงค์ของพระเจ้า (กิจการ 18:21) ขณะเดียวกัน อปอลโล ผู้มีโวหารดีก็ได้รับคำแนะนำเรื่องทางของพระเจ้าอย่างถูกต้องยิ่งขึ้นจากปริสคิลลาและอาควิลลาที่เมืองเอเฟซัส ก่อนที่เขาจะเดินทางต่อไปยังแคว้นอาคายา ดังนั้น ในบทที่ 19 นี้ เปาโลจึงได้กลับมาที่เมืองเอเฟซัสตามสัญญา เพื่อเริ่มต้นพันธกิจที่ยิ่งใหญ่และยาวนานถึง 3 ปี",
+ title:"ฤทธิ์เดชของพระวิญญาณบริสุทธิ์และการพลิกฟื้นเมืองเอเฟซัส",
+ points:[
+  {heading:"การรับพระวิญญาณบริสุทธิ์และความเข้าใจที่ถูกต้องในพระวจนะ",ref:"กิจการ 19:1-10",
+   body:"เมื่อเปาโลมาถึงเมืองเอเฟซัส เขาพบศิษย์บางคนที่ยังรู้จักเพียงแค่ \"บัพติศมาของยอห์น\" (ซึ่งเล็งถึงการกลับใจใหม่) เปาโลจึงได้วางมือและนำพวกเขาให้รับบัพติศมาในพระนามของพระเยซูคริสต์ และรับพระวิญญาณบริสุทธิ์ นอกจากนี้เปาโลยังใช้เวลาสั่งสอนในธรรมศาลาและในห้องประชุมของทิรันนัสอย่างสม่ำเสมอ จนพระวจนะแพร่กระจายไปทั่วแคว้นเอเชีย",
+   lessons:["คริสเตียนไม่เพียงแต่กลับใจใหม่เท่านั้น แต่ต้องพึ่งพาฤทธิ์เดชของพระวิญญาณบริสุทธิ์ และยอมจำนนต่อการสัตย์ซื่อในการศึกษาพระวจนะของพระเจ้า เพื่อชีวิตฝ่ายวิญญาณจะเติบโตอย่างถูกต้อง",
+    "ความเชื่อที่ถูกต้องต้องมาจากความเข้าใจพระวจนะที่ถูกต้อง เราจึงควรเปิดใจรับการสั่งสอน เหมือนศิษย์ที่เอเฟซัสที่ยอมรับคำอธิบายของเปาโลด้วยความถ่อมใจ",
+    "การเติบโตฝ่ายวิญญาณไม่ได้เกิดในวันเดียว เปาโลสั่งสอนทุกวันเป็นเวลาสองปี เราจึงควรสัตย์ซื่อในการอ่านและศึกษาพระวจนะอย่างสม่ำเสมอทุกวัน",
+    "พระวิญญาณบริสุทธิ์ไม่ใช่เรื่องไกลตัว พระองค์ทรงสถิตกับผู้เชื่อทุกคน เราควรทูลขอการทรงนำจากพระองค์ในการตัดสินใจทุกเรื่องของชีวิต",
+    "เมื่อเรายึดมั่นในพระวจนะ แม้ถูกต่อต้านเหมือนเปาโลในธรรมศาลา พระเจ้าก็ทรงเปิดประตูใหม่ให้พระวจนะแพร่ออกไปได้เสมอ"]},
+  {heading:"ฤทธิ์เดชที่แท้จริงกับการกลับใจที่หักรากถอนโคน",ref:"กิจการ 19:11-20",
+   body:"พระเจ้าทรงทำการอัศจรรย์ผ่านเปาโลอย่างมาก จนกระทั่งพวกยิวบางคนที่หากินกับการขับผีพยายามเลียนแบบโดยใช้พระนามของพระเยซู (บุตรทั้งเจ็ดของสเควา) แต่กลับถูกผีทำร้ายจนต้องหนีเตลิดไป เหตุการณ์นี้ทำให้คนทั้งเมืองเกิดความเกรงกลัวพระเจ้า คนที่เชื่อแล้วจึงนำหนังสือคาถาอาคมของตนมาเผาทิ้งรวมกันเป็นมูลค่ามหาศาล",
+   lessons:["พระนามของพระเยซูคริสต์ไม่ใช่ \"คาถา\" หรือเครื่องรางที่เราจะนำมาใช้ตามใจชอบ การกลับใจใหม่ที่แท้จริงต้องนำไปสู่การละทิ้งสิ่งชั่วร้ายและรูปเคารพฝ่ายวิญญาณในอดีตอย่างสิ้นเชิง โดยไม่เสียดายคุณค่าทางโลก",
+    "ฤทธิ์เดชไม่ได้อยู่ที่ผ้าเช็ดหน้าหรือสิ่งของ แต่อยู่ที่พระเจ้าผู้ทรงกระทำ เราจึงต้องระวังไม่ยึดติดกับวัตถุหรือพิธีกรรมมากกว่าพระเจ้าเอง",
+    "การรู้จักพระนามของพระเยซูกับการรู้จักพระเยซูเป็นการส่วนตัวไม่เหมือนกัน บุตรของสเควารู้จักแค่ชื่อ แต่ไม่ได้มีความสัมพันธ์กับพระองค์",
+    "การกลับใจที่แท้จริงมีราคาที่ต้องจ่าย ชาวเอเฟซัสยอมเผาหนังสือมูลค่าห้าหมื่นเหรียญเงิน เราพร้อมจะทิ้งสิ่งใดที่ขัดขวางความเชื่อของเราบ้าง",
+    "เมื่อผู้เชื่อสารภาพบาปอย่างเปิดเผยและจริงใจ พระวจนะขององค์พระผู้เป็นเจ้าก็เจริญขึ้นและมีชัยชนะ ชีวิตที่เปลี่ยนแปลงคือคำพยานที่มีพลังที่สุด"]},
+  {heading:"การปะทะกันระหว่างอาณาจักรของพระเจ้ากับผลประโยชน์ของโลก",ref:"กิจการ 19:23-41",
+   body:"เมื่อพระกิตติคุณขยายใหญ่ขึ้น ระบบรูปเคารพของเมืองเอเฟซัสก็เริ่มสั่นคลอน เดเมตริอุสช่างเงินผู้ทำรูปจำลองวิหารพระแม่ไดอานา (อาร์เทมิส) เสียผลประโยชน์ จึงได้ระดมฝูงชนก่อจลาจลต่อต้านเปาโลและพวกพ้อง เหตุการณ์วุ่นวายอย่างมากจนเจ้าหน้าที่เมืองต้องเข้ามาควบคุมและสลายการชุมนุม",
+   lessons:["เมื่อเราดำเนินชีวิตตามทางของพระเจ้าอย่างจริงจัง เราอาจต้องเผชิญกับการต่อต้านจากค่านิยมของโลกหรือผู้ที่เสียผลประโยชน์ แต่จงมั่นใจว่าพระเจ้าทรงควบคุมทุกสถานการณ์ และพระองค์จะทรงปกป้องผู้รับใช้ของพระองค์เสมอ",
+    "การต่อต้านไม่ได้แปลว่าเราทำผิด บางครั้งเป็นสัญญาณว่าพระกิตติคุณกำลังเปลี่ยนแปลงสังคมจริงๆ",
+    "พระเจ้าทรงใช้ได้แม้กระทั่งคนนอกคริสตจักร เช่น เจ้าหน้าที่เมือง เพื่อปกป้องผู้รับใช้ของพระองค์ เราจึงไม่ต้องกลัวเมื่อเหตุการณ์ดูวุ่นวาย",
+    "ผลประโยชน์ทางเงินทองมักเป็นเหตุให้คนต่อต้านความจริง เราควรสำรวจใจว่าเงินทองกำลังมีอำนาจเหนือการตัดสินใจของเราหรือไม่",
+    "เหมือนที่พวกสาวกห้ามเปาโลไม่ให้เข้าไปในโรงมหรสพ พระเจ้าทรงใช้พี่น้องในพระคริสต์เพื่อดูแลกันในยามวิกฤต เราควรรับฟังคำเตือนด้วยความรักจากพี่น้อง"]}],
+ conclusion:"พระธรรมกิจการบทที่ 19 สำแดงให้เราเห็นว่า \"พระวจนะขององค์พระผู้เป็นเจ้าก็เจริญขึ้นและมีชัยชนะอย่างยิ่งใหญ่\" (ข้อ 20) เมืองเอเฟซัสที่เคยเต็มไปด้วยไสยศาสตร์และอำนาจมืด กลับถูกพลิกฟื้นด้วยฤทธิ์เดชของพระวิญญาณบริสุทธิ์และการประกาศพระวจนะอย่างสัตย์ซื่อ\n\nขอให้เรามั่นใจว่า ไม่ว่าสถานการณ์รอบตัวเราจะดูมืดมน หรือมีกระแสโลกที่ต่อต้านความเชื่อฝ่ายวิญญาณมากเพียงใด พระเจ้าของเราทรงยิ่งใหญ่กว่า ขอนำหัวใจที่พึ่งพาพระวิญญาณบริสุทธิ์ และความกล้าหาญที่จะละทิ้งสิ่งเก่าๆ มาเป็นพลังขับเคลื่อนชีวิตของเราในวันนี้",
+ questions:[
+  {label:"สำรวจชีวิตฝ่ายวิญญาณ",text:"ในปัจจุบัน มี \"บัพติศมาของยอห์น\" หรือสิ่งใดในชีวิตที่เรายังยึดติดอยู่ และเราได้เปิดใจพึ่งพาฤทธิ์เดชและการทรงนำของพระวิญญาณบริสุทธิ์ในทุกๆ วันแล้วหรือยัง?"},
+  {label:"การกลับใจที่แท้จริง",text:"เมื่อคิดถึงเหตุการณ์ที่ชาวเอเฟซัสเผาหนังสือคาถาอาคมราคาแพง มี \"รูปเคารพ\" หรือ \"สิ่งของ/พฤติกรรมในอดีต\" ใดในชีวิตของเราที่พระเจ้ากำลังท้าทายให้เรายอมตัดขาดและทิ้งไปอย่างเด็ดขาดในวันนี้บ้าง?"},
+  {label:"การยืนหยัดท่ามกลางการต่อต้าน",text:"หากการดำเนินชีวิตคริสเตียนที่สัตย์ซื่อทำให้คุณต้องขัดแย้งกับผลประโยชน์ หรือกระแสสังคมรอบข้าง (เหมือนที่เปาโลเผชิญกับช่างเงิน) คุณจะยึดหลักการใดในพระคัมภีร์บทนี้เพื่อช่วยให้คุณยืนหยัดต่อไปได้?"}]
+};
+
+/* ---------- State ---------- */
+const STEP_NAMES=["ข้อพระคัมภีร์หลัก","คำนำ","บริบทก่อนหน้า","เนื้อหาบทเรียน","บทสรุป","คำถามท้าทาย","ดาวน์โหลด Word"];
+const fresh=()=>({step:1,book:"ACT",ch:19,v1:11,v2:12,verseText:DEMO_VERSE,lockedKey:"",title:"",intros:[],introPick:-1,intro:"",background:"",points:[],conclusion:"",questions:[],done:{}});
+let S;
+try{S=JSON.parse(localStorage.getItem("sermon-state")||"null")}catch(e){S=null}
+if(!S||!S.book)S=fresh();
+let ui={bookTab:bIdx(S.book)>=39?"nt":"ot",bookOpen:false,busy:null,msg:null,demo:false,resetAsk:false};
+const save=()=>{try{localStorage.setItem("sermon-state",JSON.stringify(S))}catch(e){}};
+const key=()=>[S.book,S.ch,S.v1,S.v2].join("|");
+const refLabel=()=>`${bName(S.book)} ${S.ch}:${S.v1}${S.v2>S.v1?"-"+S.v2:""}`;
+const bibleUrl=()=>`https://www.bible.com/th/bible/174/${S.book}.${S.ch}.${S.v1}${S.v2>S.v1?"-"+S.v2:""}.THSV11`;
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------- Sound ---------- */
+let soundOn=true,actx=null;
+try{soundOn=localStorage.getItem("sermon-sound")!=="off"}catch(e){}
+function tone(freqs,dur=.12,type="sine",vol=.12){
+  if(!soundOn)return;
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    let t=actx.currentTime;
+    freqs.forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.value=f;
+      g.gain.setValueAtTime(0,t+i*dur*.8);g.gain.linearRampToValueAtTime(vol,t+i*dur*.8+.01);g.gain.exponentialRampToValueAtTime(.0001,t+i*dur*.8+dur*2.2);
+      o.connect(g).connect(actx.destination);o.start(t+i*dur*.8);o.stop(t+i*dur*.8+dur*2.4)});
+  }catch(e){}
+}
+const sClick=()=>tone([740],.06,"triangle",.09);
+const sOk=()=>tone([523.25,659.25,783.99],.13,"sine",.12);
+const sDone=()=>tone([523.25,659.25,783.99,1046.5],.16,"sine",.13);
+document.addEventListener("click",e=>{const b=e.target.closest("button,a.btn");if(b&&!b.dataset.silent)sClick()},true);
+const sndBtn=document.getElementById("sndBtn");
+function paintSnd(){sndBtn.setAttribute("aria-pressed",soundOn);sndBtn.textContent=soundOn?"🔔 เสียง: เปิด":"🔕 เสียง: ปิด"}
+sndBtn.onclick=()=>{soundOn=!soundOn;try{localStorage.setItem("sermon-sound",soundOn?"on":"off")}catch(e){}paintSnd();sClick()};
+paintSnd();
+/* font size */
+const SIZES=[20,23,26];let fsI=0;
+try{fsI=+localStorage.getItem("sermon-fs")||0}catch(e){}
+const fsBtn=document.getElementById("fsBtn");
+function paintFs(){document.documentElement.style.setProperty("--fs",SIZES[fsI]+"px");fsBtn.textContent=["ก ตัวอักษร: ปกติ","ก ตัวอักษร: ใหญ่","ก ตัวอักษร: ใหญ่มาก"][fsI]}
+fsBtn.onclick=()=>{fsI=(fsI+1)%SIZES.length;try{localStorage.setItem("sermon-fs",fsI)}catch(e){}paintFs()};
+paintFs();
+
+/* ---------- AI ---------- */
+let samplePromise=null;
+function getSample(){
+  if(!samplePromise)samplePromise=(window.claude&&window.claude.use)?window.claude.use("sample").catch(()=>null):Promise.resolve(null);
+  return samplePromise;
+}
+getSample();
+const inClaude=!!(window.claude&&window.claude.use);
+let apiKey="";try{apiKey=localStorage.getItem("sermon-apikey")||""}catch(e){}
+const MODEL="claude-sonnet-5-5";
+async function apiJSON(prompt,signal){
+  const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",signal,headers:{"content-type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:MODEL,max_tokens:8000,messages:[{role:"user",content:prompt}]})});
+  if(!res.ok){const e=new Error("http");e.code=res.status===401?"bad_key":res.status===429?"rate_limited":res.status===400?"bad_request_api":"upstream_error";throw e}
+  const j=await res.json();const t=(j.content||[]).filter(c=>c.type==="text").map(c=>c.text).join("");
+  const m=t.match(/[\[{][\s\S]*[\]}]/);if(!m){const e=new Error("json");e.code="invalid_json";throw e}
+  try{return JSON.parse(m[0])}catch(_){const e=new Error("json");e.code="invalid_json";throw e}
+}
+const aiBtn=document.getElementById("aiBtn"),aiPanel=document.getElementById("aiPanel");
+if(!inClaude){aiBtn.hidden=false}
+function openAi(){aiPanel.hidden=false;document.getElementById("keyIn").value=apiKey?apiKey.slice(0,10)+"••••••":"";aiPanel.scrollIntoView({behavior:"smooth"})}
+aiBtn.onclick=()=>{aiPanel.hidden?openAi():aiPanel.hidden=true};
+document.getElementById("keyClose").onclick=()=>{aiPanel.hidden=true};
+document.getElementById("keySave").onclick=()=>{const v=document.getElementById("keyIn").value.trim();const km=document.getElementById("keyMsg");km.hidden=false;
+  if(v.includes("••")){km.className="note ok";km.textContent="ใช้รหัสเดิมอยู่แล้ว";return}
+  if(!/^sk-ant-/.test(v)){km.className="note err";km.textContent="รหัสต้องขึ้นต้นด้วย sk-ant- ลองคัดลอกใหม่อีกครั้ง";return}
+  apiKey=v;try{localStorage.setItem("sermon-apikey",v)}catch(e){}km.className="note ok";km.textContent="บันทึกรหัสแล้ว ระบบช่วยคิดพร้อมใช้งาน";sOk();ui.msg=null;render();autoGen()};
+document.getElementById("keyDel").onclick=()=>{apiKey="";try{localStorage.removeItem("sermon-apikey")}catch(e){}document.getElementById("keyIn").value="";const km=document.getElementById("keyMsg");km.hidden=false;km.className="note warn";km.textContent="ลบรหัสออกจากเครื่องนี้แล้ว"};
+const RULES=`กฎการเขียน:
+- เขียนภาษาไทยแบบบทเรียน/คำเทศนาในคริสตจักรไทย สุภาพ อบอุ่น ชัดเจน อ่านง่ายสำหรับผู้สูงอายุ
+- ใช้ชื่อบุคคล สถานที่ และศัพท์ตาม "พระคริสตธรรมคัมภีร์ ฉบับมาตรฐาน 2011" (THSV11) ของสมาคมพระคริสตธรรมไทยเท่านั้น (เช่น เปาโล อปอลโล เอเฟซัส พระวิญญาณบริสุทธิ์ บัพติศมา อัครทูต พระกิตติคุณ)
+- อ้างอิงพระคัมภีร์รูปแบบ "กิจการ 19:1-10"
+- ยึดตามเหตุการณ์ในพระคัมภีร์จริงเท่านั้น ห้ามแต่งเหตุการณ์หรือข้อพระคัมภีร์ขึ้นเอง ถ้าจะยกถ้อยคำจากพระคัมภีร์ให้ยกสั้นๆ ไม่เกินหนึ่งประโยคและใส่เลขข้อกำกับ
+- ทำตามสำนวน ความยาว และโครงสร้างของบทเรียนตัวอย่างให้ใกล้เคียงที่สุด
+- ตอบเป็น JSON ตามรูปแบบที่ขอเท่านั้น ไม่มีข้อความอื่น`;
+function context(){
+  let c=`บทเรียนตัวอย่าง (ใช้เป็นแบบของสำนวนและโครงสร้าง ห้ามคัดลอกเนื้อหามาใช้ถ้าเป็นคนละตอน):\n<<<\n${STYLE_SAMPLE}\n>>>\n\nข้อมูลบทเรียนที่กำลังเตรียม:\n- ข้อพระคัมภีร์หลัก: ${refLabel()} (ฉบับมาตรฐาน THSV11)\n- ข้อความ: "${S.verseText.trim()}"\n- ขอบเขตบทเรียน: พระธรรม${bName(S.book)} บทที่ ${S.ch} ทั้งบท โดยข้อหลักต้องอยู่ในบทเรียนด้วย`;
+  if(S.title)c+=`\n- หัวข้อบทเรียน: ${S.title}`;
+  if(S.done[2]&&S.intro)c+=`\n- คำนำที่เลือกแล้ว: ${S.intro}`;
+  if(S.done[3]&&S.background)c+=`\n- บริบทก่อนหน้าที่ยืนยันแล้ว: ${S.background}`;
+  if(S.done[4]&&S.points.length)c+=`\n- เนื้อหาบทเรียนที่ยืนยันแล้ว:\n`+S.points.map((p,i)=>`  ประการที่ ${i+1}: ${p.heading} (${p.ref}) บทเรียน: ${p.lesson}`).join("\n");
+  return c;
+}
+let ctl=null;
+async function ask(label,task,demoFn){
+  ui.busy=label;ui.msg=null;render();
+  let sample=await getSample();
+  if(!sample&&apiKey)sample={json:(p,o)=>apiJSON(p,o.signal)};
+  const canDemo=key()===DEMO_KEY&&demoFn;
+  if(!sample){
+    if(!inClaude&&!canDemo){ui.busy=null;ui.msg={k:"err",t:"ยังไม่ได้ใส่รหัส API กดปุ่ม \"⚙ ตั้งค่า AI\" ด้านบนเพื่อเปิดระบบช่วยคิด หรือพิมพ์เนื้อหาเองในช่องด้านล่างได้เลย"};render();openAi();return}
+    ui.busy=null;
+    if(canDemo){ui.demo=true;demoFn();ui.msg={k:"warn",t:inClaude?"ตัวอย่างนี้แสดงเนื้อหาสาธิตจากกิจการ 19 เพราะยังเชื่อมระบบช่วยคิดไม่ได้ในหน้านี้":"แสดงเนื้อหาสาธิตจากกิจการ 19 ถ้าต้องการให้ระบบคิดเนื้อหาจริง กด \"⚙ ตั้งค่า AI\" ด้านบน"};save();render();return}
+    ui.msg={k:"err",t:"ยังเชื่อมระบบช่วยคิดไม่ได้ในหน้านี้ ลองเปิดหน้านี้ใน Claude แล้วกดอนุญาตเมื่อระบบถาม หรือพิมพ์เนื้อหาเองในช่องด้านล่างได้เลย"};render();return;
+  }
+  ctl=new AbortController();
+  try{
+    const out=await sample.json(context()+"\n\n"+task+"\n\n"+RULES,{signal:ctl.signal,cache:false,modelTier:"default"});
+    ui.busy=null;ui.demo=false;return out;
+  }catch(e){
+    ui.busy=null;
+    const m={cancelled:"หยุดการคิดแล้ว",not_granted:"ยังไม่ได้อนุญาตให้ใช้ระบบช่วยคิด เปิดหน้านี้ใหม่แล้วกด \"อนุญาต\" เมื่อระบบถาม",rate_limited:"ระบบกำลังทำงานหนัก รอสักครู่แล้วกดอีกครั้ง",invalid_json:"ระบบตอบกลับมาไม่ครบ กดคิดใหม่อีกครั้ง",prompt_too_large:"ข้อความยาวเกินไป ลองตัดข้อความพระคัมภีร์ให้สั้นลง",bad_key:"รหัส API ไม่ถูกต้อง กด \"⚙ ตั้งค่า AI\" เพื่อใส่ใหม่",bad_request_api:"ระบบปฏิเสธคำขอ อาจเป็นเพราะเครดิตในบัญชี Anthropic หมด"};
+    if(e&&e.code==="not_granted"&&canDemo){ui.demo=true;demoFn();ui.msg={k:"warn",t:"แสดงเนื้อหาสาธิตจากกิจการ 19 เพราะยังไม่ได้อนุญาตระบบช่วยคิด"};save();render();return}
+    ui.msg={k:e&&e.code==="cancelled"?"warn":"err",t:m[e&&e.code]||"ระบบช่วยคิดขัดข้อง กดลองใหม่อีกครั้ง"};
+    render();return;
+  }
+}
+
+/* ---------- Generators ---------- */
+async function genIntros(){
+  const prev=S.intros.length?`\nห้ามซ้ำกับคำนำเหล่านี้:\n${S.intros.map(x=>"- "+x.slice(0,80)).join("\n")}`:"";
+  const r=await ask("กำลังคิดคำนำ 5 แบบ",`งาน: เขียน "คำนำ (Introduction)" 5 แบบที่แตกต่างกัน (เช่น เปิดด้วยคำถาม เรื่องในชีวิตประจำวันของคนไทย สถานการณ์ปัจจุบัน ภาพเปรียบ และความจริงในพระคัมภีร์) แต่ละแบบยาว 1 ย่อหน้า 3-5 ประโยค ใกล้เคียงคำนำในบทเรียนตัวอย่าง และเชื่อมเข้าสู่พระธรรม${bName(S.book)}บทที่ ${S.ch}${prev}\nรูปแบบ JSON: {"options":["...","...","...","...","..."]}`,
+    ()=>{S.intros=S.intros.length?[...DEMO.intros.slice(1),DEMO.intros[0]]:DEMO.intros.slice();S.introPick=-1});
+  if(r&&Array.isArray(r.options)){S.intros=r.options.slice(0,5).map(String);S.introPick=-1;save();sOk();render()}
+}
+async function genBackground(){
+  const r=await ask("กำลังเรียบเรียงบริบทก่อนหน้า",`งาน: เขียน "บริบทก่อนหน้านี้ (Background & Context)" 1 ย่อหน้า อธิบายเหตุการณ์ในพระคัมภีร์ก่อนถึงพระธรรม${bName(S.book)}บทที่ ${S.ch} (บทก่อนหน้า ผู้เกี่ยวข้อง สถานที่ และเหตุที่นำมาสู่บทนี้) พร้อมอ้างอิงข้อในวงเล็บแบบบทเรียนตัวอย่าง\nรูปแบบ JSON: {"text":"..."}`,
+    ()=>{S.background=DEMO.background});
+  if(r&&r.text){S.background=String(r.text);save();sOk();render()}
+}
+async function genOutline(){
+  const r=await ask("กำลังวางโครงเนื้อหาบทเรียน",`งาน: วาง "เนื้อหาบทเรียน (Lesson Outline)" ของพระธรรม${bName(S.book)}บทที่ ${S.ch} เป็น 3 ประการ (หรือ 2-4 ประการถ้าเหมาะกว่า) เรียงตามลำดับเหตุการณ์ในบท และต้องมีประการหนึ่งที่ครอบคลุมข้อหลัก ${refLabel()} แต่ละประการมี
+- heading: หัวข้อสั้น
+- body: คำอธิบาย 1 ย่อหน้า 3-4 ประโยค เล่าเหตุการณ์ตามพระคัมภีร์
+- ref: ข้อพระคัมภีร์สนับสนุน เช่น "${bName(S.book)} ${S.ch}:1-10"
+- lessons: "บทเรียนสำหรับเรา" 5 แบบที่ต่างกัน แต่ละแบบ 1-2 ประโยค นำไปใช้ในชีวิตได้จริง
+และตั้ง title หัวข้อของบทเรียนทั้งบท 1 ประโยค
+รูปแบบ JSON: {"title":"...","points":[{"heading":"...","body":"...","ref":"...","lessons":["...","...","...","...","..."]}]}`,
+    ()=>{S.title=DEMO.title;S.points=DEMO.points.map(p=>({...p,lessons:p.lessons.slice(),pick:-1,lesson:""}))});
+  if(r&&Array.isArray(r.points)){
+    if(r.title)S.title=String(r.title);
+    S.points=r.points.map(p=>({heading:String(p.heading||""),body:String(p.body||""),ref:String(p.ref||""),lessons:(p.lessons||[]).slice(0,5).map(String),pick:-1,lesson:""}));
+    save();sOk();render();
+  }
+}
+async function genLessons(i){
+  const p=S.points[i];
+  const r=await ask(`กำลังคิดบทเรียนสำหรับเรา ประการที่ ${i+1}`,`งาน: คิด "บทเรียนสำหรับเรา" ใหม่ 5 แบบ สำหรับประการที่ ${i+1}: "${p.heading}" (${p.ref})\nเนื้อหา: ${p.body}\nแต่ละแบบ 1-2 ประโยค ต่างกันชัดเจน นำไปใช้ในชีวิตคริสเตียนได้จริง ห้ามซ้ำกับ:\n${p.lessons.map(x=>"- "+x.slice(0,70)).join("\n")}\nรูปแบบ JSON: {"options":["...","...","...","...","..."]}`,
+    ()=>{const d=DEMO.points[i];if(d){p.lessons=[...p.lessons.slice(1),p.lessons[0]];p.pick=-1}});
+  if(r&&Array.isArray(r.options)){p.lessons=r.options.slice(0,5).map(String);p.pick=-1;save();sOk();render()}
+}
+async function addPoint(){
+  const r=await ask("กำลังเพิ่มประการใหม่",`งาน: เพิ่ม "ประการที่ ${S.points.length+1}" ต่อจากโครงที่มีอยู่ (${S.points.map(p=>p.heading+" "+p.ref).join(" / ")}) จากพระธรรม${bName(S.book)}บทที่ ${S.ch} ส่วนที่ยังไม่ได้กล่าวถึง\nรูปแบบ JSON: {"heading":"...","body":"...","ref":"...","lessons":["...","...","...","...","..."]}`,null);
+  if(r&&r.heading){S.points.push({heading:String(r.heading),body:String(r.body||""),ref:String(r.ref||""),lessons:(r.lessons||[]).slice(0,5).map(String),pick:-1,lesson:""});save();sOk();render()}
+}
+async function genConclusion(){
+  const r=await ask("กำลังเขียนบทสรุป",`งาน: เขียน "บทสรุปท้าทายและหนุนใจ (Conclusion & Encouragement)" 2 ย่อหน้า ย่อหน้าแรกสรุปใจความของบท (ยกข้อสำคัญ 1 ข้อได้) ย่อหน้าที่สองหนุนใจและท้าทายผู้ฟัง ใกล้เคียงบทเรียนตัวอย่าง\nรูปแบบ JSON: {"paragraphs":["...","..."]}`,
+    ()=>{S.conclusion=DEMO.conclusion});
+  if(r&&Array.isArray(r.paragraphs)){S.conclusion=r.paragraphs.map(String).join("\n\n");save();sOk();render()}
+}
+async function genQuestions(){
+  const r=await ask("กำลังคิดคำถาม 3 ข้อ",`งาน: เขียน "คำถามท้าทายและเสริมหนุนผู้เรียน (Discussion Questions)" 3 ข้อ แต่ละข้อมีหัวข้อสั้น (label) และคำถามที่เชื่อมเหตุการณ์ในบทกับชีวิตจริง ลงท้ายด้วย ? แบบบทเรียนตัวอย่าง ให้สอดคล้องกับเนื้อหาบทเรียนทั้ง 3 ประการ\nรูปแบบ JSON: {"questions":[{"label":"...","text":"..."},{"label":"...","text":"..."},{"label":"...","text":"..."}]}`,
+    ()=>{S.questions=DEMO.questions.map(q=>({...q}))});
+  if(r&&Array.isArray(r.questions)){S.questions=r.questions.slice(0,3).map(q=>({label:String(q.label||""),text:String(q.text||"")}));save();sOk();render()}
+}
+
+/* ---------- Render ---------- */
+const stage=document.getElementById("stage"),stepsEl=document.getElementById("steps");
+function canGo(n){if(n===1)return true;for(let i=1;i<n;i++)if(!S.done[i])return false;return true}
+function renderSteps(){
+  stepsEl.innerHTML=STEP_NAMES.map((n,i)=>{const k=i+1;const cls=[S.step===k?"cur":"",S.done[k]?"done":""].join(" ");
+    return `<li class="${cls}"><button data-go="${k}" ${canGo(k)?"":"disabled"} ${S.step===k?'aria-current="step"':""}><span class="n">${S.done[k]?"✓":k}</span>${n}</button></li>`}).join("");
+  stepsEl.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{S.step=+b.dataset.go;ui.msg=null;save();render();scrollTop()});
+  const cur=stepsEl.querySelector(".cur");
+  requestAnimationFrame(()=>stage.querySelectorAll(".grid").forEach(g=>{const on=g.querySelector('[aria-pressed="true"]');if(on)g.scrollTop=on.offsetTop-g.offsetTop-g.clientHeight/2+on.clientHeight/2}));if(cur)cur.scrollIntoView({block:"nearest",inline:"center"});
+}
+function scrollTop(){try{stepsEl.scrollIntoView({behavior:"smooth",block:"start"})}catch(e){}}
+const CROSS='<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="16" y="3" width="8" height="34" rx="2" fill="var(--gold)"/><rect x="6" y="11" width="28" height="8" rx="2" fill="var(--gold)"/></svg>';
+function busyHTML(){return ui.busy?`<div class="busy">${CROSS}<p><b>${esc(ui.busy)}…</b><br><span class="hint">อาจใช้เวลา 10–60 วินาที</span></p><button class="btn ghost" id="stopBtn">หยุด</button></div>`:""}
+function msgHTML(){return ui.msg?`<p class="note ${ui.msg.k}">${esc(ui.msg.t)}</p>`:""}
+function head(k,title,hint){return `<div><div class="eyebrow">ขั้นที่ ${k} จาก 7</div><h2>${title}</h2>${hint?`<p class="hint">${hint}</p>`:""}</div>`}
+function nav(k,okLabel,okDisabled){return `<div class="actions">${k>1?`<button class="btn ghost" id="backBtn">‹ ย้อนกลับ</button>`:"<span></span>"}<button class="btn primary" id="okBtn" ${okDisabled?"disabled":""}>${okLabel||"ยืนยัน ไปขั้นต่อไป ›"}</button></div>`}
+function confirmStep(k){S.done[k]=true;S.step=k+1;ui.msg=null;save();(k===6?sDone:sOk)();render();scrollTop();autoGen()}
+function autoGen(){
+  if(ui.busy)return;
+  const s=S.step;
+  if(s===2&&!S.intros.length&&!S.intro)genIntros();
+  else if(s===3&&!S.background)genBackground();
+  else if(s===4&&!S.points.length)genOutline();
+  else if(s===5&&!S.conclusion)genConclusion();
+  else if(s===6&&!S.questions.length)genQuestions();
+}
+function autosize(t){t.style.height="auto";t.style.height=(t.scrollHeight+4)+"px"}
+
+function render(){
+  renderSteps();
+  const k=S.step;let h="";
+  if(k===1)h=step1();
+  else if(k===2)h=step2();
+  else if(k===3)h=stepText(3,"บริบทก่อนหน้านี้ (Background &amp; Context)","ระบบเรียบเรียงเหตุการณ์ก่อนหน้าจากพระคัมภีร์ฉบับมาตรฐานให้ แก้คำได้ตามต้องการ","background",genBackground,"คิดบริบทใหม่");
+  else if(k===4)h=step4();
+  else if(k===5)h=stepText(5,"บทสรุปท้าทายและหนุนใจ (Conclusion &amp; Encouragement)","เว้นบรรทัดว่างเพื่อขึ้นย่อหน้าใหม่","conclusion",genConclusion,"คิดบทสรุปใหม่");
+  else if(k===6)h=step6();
+  else h=step7();
+  stage.innerHTML=h;
+  bind(k);
+  stage.querySelectorAll("textarea").forEach(t=>{autosize(t);t.addEventListener("input",()=>autosize(t))});
+  const sb=document.getElementById("stopBtn");if(sb)sb.onclick=()=>ctl&&ctl.abort();
+  const bb=document.getElementById("backBtn");if(bb)bb.onclick=()=>{S.step=k-1;ui.msg=null;save();render();scrollTop()};
+}
+
+function step1(){
+  const bi=bIdx(S.book),chs=VC[bi].length,nv=VC[bi][S.ch-1];
+  const list=BOOKS.map((b,i)=>({b,i})).filter(o=>ui.bookTab==="ot"?o.i<39:o.i>=39);
+  const vopts=(sel)=>Array.from({length:nv},(_,i)=>`<option value="${i+1}" ${sel===i+1?"selected":""}>${i+1}</option>`).join("");
+  const changed=S.lockedKey&&S.lockedKey!==key();
+  return head(1,"เลือกข้อพระคัมภีร์หลัก (Key Verse)","เลือกพระธรรม บท และข้อ แล้ววางข้อความจากพระคัมภีร์ฉบับมาตรฐาน")+`
+  <div><label class="lb">1. พระธรรม</label>
+    <button class="btn" id="bookToggle" aria-expanded="${ui.bookOpen}">${esc(bName(S.book))} ▾</button></div>
+  ${ui.bookOpen?`<div class="picker"><div class="tabs" role="tablist"><button role="tab" data-tab="ot" aria-selected="${ui.bookTab==="ot"}">พันธสัญญาเดิม</button><button role="tab" data-tab="nt" aria-selected="${ui.bookTab==="nt"}">พันธสัญญาใหม่</button></div>
+    <div class="grid">${list.map(o=>`<button data-book="${o.b[0]}" aria-pressed="${o.b[0]===S.book}">${o.b[1]}</button>`).join("")}</div></div>`:""}
+  <div><label class="lb">2. บทที่</label><div class="picker"><div class="grid nums">${Array.from({length:chs},(_,i)=>`<button data-ch="${i+1}" aria-pressed="${S.ch===i+1}">${i+1}</button>`).join("")}</div></div></div>
+  <div><label class="lb">3. ข้อที่ใช้</label><div class="row">
+    <div><label class="lb" for="v1" style="font-weight:400">ตั้งแต่ข้อ</label><select id="v1">${vopts(S.v1)}</select></div>
+    <div><label class="lb" for="v2" style="font-weight:400">ถึงข้อ</label><select id="v2">${vopts(S.v2)}</select></div>
+    <div class="refbig" aria-live="polite">${esc(refLabel())}</div></div></div>
+  <div class="how"><b>นำข้อความมาจาก bible.com</b><ol><li>กดปุ่มด้านล่างเพื่อเปิด ${esc(refLabel())} ฉบับมาตรฐาน (THSV11)</li><li>กดค้างที่ข้อความ เลือกคัดลอก</li><li>กลับมาที่หน้านี้ แล้ววางในช่องข้อความ</li></ol></div>
+  <div><a class="btn gold" href="${bibleUrl()}" target="_blank" rel="noopener">📖 เปิดอ่าน ${esc(refLabel())} ใน bible.com</a></div>
+  <div><label class="lb" for="vt">4. ข้อความพระคัมภีร์</label><textarea id="vt" placeholder="วางข้อความพระคัมภีร์ฉบับมาตรฐานที่คัดลอกมาที่นี่">${esc(S.verseText)}</textarea></div>
+  <div id="vprev" ${S.verseText.trim()?"":"hidden"}><div class="lb">ตัวอย่างที่จะแสดงในบทเรียน</div><div class="quote">"<span id="vq">${esc(S.verseText.trim())}</span>"<cite>— ${esc(refLabel())}</cite></div></div>
+  ${changed?`<p class="note warn">คุณเปลี่ยนข้อพระคัมภีร์แล้ว เมื่อกดยืนยัน เนื้อหาในขั้นต่อไปจะเริ่มคิดใหม่ทั้งหมด</p>`:""}
+  `+nav(1,"ยืนยันข้อพระคัมภีร์ ›",!S.verseText.trim());
+}
+function step2(){
+  return head(2,"คำนำ (Introduction)","เลือก 1 แบบที่ชอบ ถ้ายังไม่ถูกใจกด \"คิดใหม่ 5 แบบ\" เลือกแล้วแก้คำได้")+busyHTML()+msgHTML()+`
+  <div class="opts">${S.intros.map((t,i)=>`<button class="opt" data-intro="${i}" aria-pressed="${S.introPick===i}"><span class="dot">${i+1}</span><span>${esc(t)}</span></button>`).join("")}</div>
+  <div><button class="btn gold" id="regen" ${ui.busy?"disabled":""}>↻ คิดใหม่ 5 แบบ</button></div>
+  ${S.intro||S.introPick>=0?`<div><label class="lb" for="introTxt">คำนำของฉัน (แก้ไขได้)</label><textarea id="introTxt">${esc(S.intro)}</textarea></div>`:""}
+  `+nav(2,"ยืนยันคำนำ ›",!S.intro.trim()||!!ui.busy);
+}
+function stepText(k,title,hint,field,gen,regenLabel){
+  return head(k,title,hint)+busyHTML()+msgHTML()+`
+  <div><label class="lb" for="ft">ข้อความ (แก้ไขได้)</label><textarea id="ft" style="min-height:12rem">${esc(S[field])}</textarea></div>
+  <div><button class="btn gold" id="regen" ${ui.busy?"disabled":""}>↻ ${regenLabel}</button></div>`+nav(k,null,!S[field].trim()||!!ui.busy);
+}
+function step4(){
+  const allPicked=S.points.length&&S.points.every(p=>p.lesson.trim());
+  return head(4,"เนื้อหาบทเรียน (Lesson Outline)","แต่ละประการ เลือก \"บทเรียนสำหรับเรา\" 1 จาก 5 แบบ กดคิดใหม่ได้ และแก้คำได้ทุกช่อง")+busyHTML()+msgHTML()+`
+  ${S.points.length?`<div><label class="lb" for="titleIn">หัวข้อบทเรียน</label><input type="text" id="titleIn" value="${esc(S.title)}"></div>`:""}
+  ${S.points.map((p,i)=>`<div class="point">
+    <div class="pointhead"><h3>ประการที่ ${i+1}</h3>${S.points.length>1?`<button class="btn ghost" data-del="${i}" style="min-height:48px">ลบประการนี้</button>`:""}</div>
+    <div><label class="lb" for="ph${i}">หัวข้อ</label><input type="text" id="ph${i}" data-pf="heading" data-i="${i}" value="${esc(p.heading)}"></div>
+    <div><label class="lb" for="pb${i}">คำอธิบาย</label><textarea id="pb${i}" data-pf="body" data-i="${i}">${esc(p.body)}</textarea></div>
+    <div><label class="lb" for="pr${i}">ข้อพระคัมภีร์สนับสนุน</label><input type="text" id="pr${i}" data-pf="ref" data-i="${i}" value="${esc(p.ref)}"></div>
+    <div class="sub">บทเรียนสำหรับเรา: เลือก 1 แบบ</div>
+    <div class="opts">${p.lessons.map((t,j)=>`<button class="opt" data-li="${i}" data-lj="${j}" aria-pressed="${p.pick===j}"><span class="dot">${j+1}</span><span>${esc(t)}</span></button>`).join("")}</div>
+    <div><button class="btn gold" data-relesson="${i}" ${ui.busy?"disabled":""}>↻ คิดบทเรียนใหม่ 5 แบบ</button></div>
+    ${p.lesson||p.pick>=0?`<div><label class="lb" for="pl${i}">บทเรียนสำหรับเรา (แก้ไขได้)</label><textarea id="pl${i}" data-pf="lesson" data-i="${i}" style="min-height:5rem">${esc(p.lesson)}</textarea></div>`:""}
+  </div>`).join("")}
+  ${S.points.length?`<div class="row"><button class="btn" id="addPt" ${ui.busy?"disabled":""}>＋ เพิ่มประการ</button><button class="btn ghost" id="regen" ${ui.busy?"disabled":""}>↻ วางโครงใหม่ทั้งหมด</button></div>`:`<div><button class="btn gold" id="regen" ${ui.busy?"disabled":""}>↻ ให้ระบบวางโครงเนื้อหา</button></div>`}
+  ${S.points.length&&!allPicked?`<p class="hint">เลือกบทเรียนสำหรับเราให้ครบทุกประการก่อนยืนยัน</p>`:""}
+  `+nav(4,"ยืนยันเนื้อหาบทเรียน ›",!allPicked||!!ui.busy);
+}
+function step6(){
+  return head(6,"คำถามท้าทายและเสริมหนุนผู้เรียน (Discussion Questions)","คำถาม 3 ข้อ แก้คำได้ทุกข้อ")+busyHTML()+msgHTML()+`
+  ${S.questions.map((q,i)=>`<div class="qrow"><label class="lb" for="ql${i}">ข้อ ${i+1}: หัวข้อ</label><input type="text" id="ql${i}" data-qf="label" data-i="${i}" value="${esc(q.label)}">
+   <label class="lb" for="qt${i}">คำถาม</label><textarea id="qt${i}" data-qf="text" data-i="${i}" style="min-height:5rem">${esc(q.text)}</textarea></div>`).join("")}
+  <div><button class="btn gold" id="regen" ${ui.busy?"disabled":""}>↻ คิดคำถามใหม่ 3 ข้อ</button></div>`+nav(6,"ยืนยันคำถาม ›",S.questions.length<3||S.questions.some(q=>!q.text.trim())||!!ui.busy);
+}
+const paras=t=>String(t||"").split(/\n\s*\n|\n/).map(s=>s.trim()).filter(Boolean);
+function lessonTitle(){return `บทเรียน: พระธรรม${bName(S.book)} บทที่ ${S.ch}`}
+function step7(){
+  return head(7,"ตรวจทานและดาวน์โหลดไฟล์ Word","ตรวจเนื้อหาทั้งหมดก่อน ถ้าต้องการแก้ กดชื่อขั้นตอนด้านบนเพื่อกลับไปแก้ได้")+msgHTML()+`
+  <div class="row"><button class="btn primary" id="dlBtn">⬇ ดาวน์โหลดไฟล์ Word (.docx)</button><button class="btn ghost" id="newBtn">เริ่มบทเรียนใหม่</button></div>
+  ${ui.resetAsk?`<div class="confirmbox"><b>ลบบทเรียนนี้และเริ่มใหม่?</b><span class="hint">ถ้ายังไม่ได้ดาวน์โหลด เนื้อหาจะหายไป</span><div class="row"><button class="btn ghost" id="resetNo">ยกเลิก</button><button class="btn" id="resetYes" style="border-color:var(--err);color:var(--err)">ลบและเริ่มใหม่</button></div></div>`:""}
+  <article class="doc">
+   <h1>${esc(lessonTitle())}</h1><p class="noind"><b>หัวข้อ:</b> ${esc(S.title)}</p>
+   <h2>ข้อพระคัมภีร์หลัก (Key Verse)</h2><div class="quote">"${esc(S.verseText.trim())}"<cite>— ${esc(refLabel())}</cite></div>
+   <h2>คำนำ (Introduction)</h2>${paras(S.intro).map(p=>`<p>${esc(p)}</p>`).join("")}
+   <h2>บริบทก่อนหน้านี้ (Background &amp; Context)</h2>${paras(S.background).map(p=>`<p>${esc(p)}</p>`).join("")}
+   <h2>เนื้อหาบทเรียน (Lesson Outline)</h2>
+   ${S.points.map((p,i)=>`<h3>ประการที่ ${i+1}: ${esc(p.heading)}</h3>${paras(p.body).map(x=>`<p>${esc(x)}</p>`).join("")}<ul><li><b>ข้อพระคัมภีร์สนับสนุน:</b> ${esc(p.ref)}</li><li><b>บทเรียนสำหรับเรา:</b> ${esc(p.lesson)}</li></ul>`).join("")}
+   <h2>บทสรุปท้าทายและหนุนใจ (Conclusion &amp; Encouragement)</h2>${paras(S.conclusion).map(p=>`<p>${esc(p)}</p>`).join("")}
+   <h2>คำถามท้าทายและเสริมหนุนผู้เรียน (Discussion Questions)</h2><ul>${S.questions.map(q=>`<li><b>${esc(q.label)}:</b> ${esc(q.text)}</li>`).join("")}</ul>
+  </article>
+  <div class="actions"><button class="btn ghost" id="backBtn">‹ ย้อนกลับ</button><button class="btn primary" id="dlBtn2">⬇ ดาวน์โหลดไฟล์ Word</button></div>`;
+}
+
+function bind(k){
+  const $=id=>document.getElementById(id);
+  const regen=$("regen");
+  if(k===1){
+    $("bookToggle").onclick=()=>{ui.bookOpen=!ui.bookOpen;render()};
+    stage.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{ui.bookTab=b.dataset.tab;render()});
+    stage.querySelectorAll("[data-book]").forEach(b=>b.onclick=()=>{if(S.book!==b.dataset.book){S.book=b.dataset.book;S.ch=1;S.v1=1;S.v2=1;S.verseText=""}ui.bookOpen=false;save();render()});
+    stage.querySelectorAll("[data-ch]").forEach(b=>b.onclick=()=>{const c=+b.dataset.ch;if(c!==S.ch){S.ch=c;S.v1=1;S.v2=1;S.verseText=""}save();render()});
+    $("v1").onchange=e=>{S.v1=+e.target.value;if(S.v2<S.v1)S.v2=S.v1;S.verseText=key()===DEMO_KEY?DEMO_VERSE:"";save();render()};
+    $("v2").onchange=e=>{S.v2=+e.target.value;if(S.v2<S.v1)S.v1=S.v2;S.verseText=key()===DEMO_KEY?DEMO_VERSE:"";save();render()};
+    $("vt").oninput=e=>{S.verseText=e.target.value;save();const t=S.verseText.trim();$("okBtn").disabled=!t;$("vq").textContent=t;$("vprev").hidden=!t};
+    $("okBtn").onclick=()=>{
+      if(S.lockedKey&&S.lockedKey!==key()){const keep={book:S.book,ch:S.ch,v1:S.v1,v2:S.v2,verseText:S.verseText};S=Object.assign(fresh(),keep)}
+      S.lockedKey=key();confirmStep(1)};
+  }
+  if(k===2){
+    stage.querySelectorAll("[data-intro]").forEach(b=>b.onclick=()=>{S.introPick=+b.dataset.intro;S.intro=S.intros[S.introPick];save();render();const t=$("introTxt");if(t)t.scrollIntoView({block:"nearest",behavior:"smooth"})});
+    const t=$("introTxt");if(t)t.oninput=e=>{S.intro=e.target.value;save();$("okBtn").disabled=!S.intro.trim()};
+    regen.onclick=genIntros;
+    $("okBtn").onclick=()=>confirmStep(2);
+  }
+  if(k===3||k===5){
+    const f=k===3?"background":"conclusion";
+    $("ft").oninput=e=>{S[f]=e.target.value;save();$("okBtn").disabled=!S[f].trim()};
+    regen.onclick=k===3?genBackground:genConclusion;
+    $("okBtn").onclick=()=>confirmStep(k);
+  }
+  if(k===4){
+    const ti=$("titleIn");if(ti)ti.oninput=e=>{S.title=e.target.value;save()};
+    stage.querySelectorAll("[data-pf]").forEach(el=>el.oninput=e=>{S.points[+el.dataset.i][el.dataset.pf]=e.target.value;save();
+      $("okBtn").disabled=!S.points.every(p=>p.lesson.trim())});
+    stage.querySelectorAll("[data-li]").forEach(b=>b.onclick=()=>{const p=S.points[+b.dataset.li];p.pick=+b.dataset.lj;p.lesson=p.lessons[p.pick];save();render();const t=$("pl"+b.dataset.li);if(t)t.scrollIntoView({block:"nearest",behavior:"smooth"})});
+    stage.querySelectorAll("[data-relesson]").forEach(b=>b.onclick=()=>genLessons(+b.dataset.relesson));
+    stage.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{S.points.splice(+b.dataset.del,1);save();render()});
+    const ap=$("addPt");if(ap)ap.onclick=addPoint;
+    regen.onclick=genOutline;
+    $("okBtn").onclick=()=>{if(!S.title.trim())S.title=S.points[0].heading;confirmStep(4)};
+  }
+  if(k===6){
+    stage.querySelectorAll("[data-qf]").forEach(el=>el.oninput=e=>{S.questions[+el.dataset.i][el.dataset.qf]=e.target.value;save();$("okBtn").disabled=S.questions.some(q=>!q.text.trim())});
+    regen.onclick=genQuestions;
+    $("okBtn").onclick=()=>confirmStep(6);
+  }
+  if(k===7){
+    $("dlBtn").onclick=$("dlBtn2").onclick=downloadDocx;
+    $("newBtn").onclick=()=>{ui.resetAsk=true;render()};
+    const rn=$("resetNo");if(rn)rn.onclick=()=>{ui.resetAsk=false;render()};
+    const ry=$("resetYes");if(ry)ry.onclick=()=>{S=fresh();S.verseText="";S.book="ACT";S.ch=1;S.v1=1;S.v2=1;ui.resetAsk=false;ui.msg=null;save();render();scrollTop()};
+  }
+}
+
+/* ---------- Word export ---------- */
+async function buildDocx(){
+  const D=window.docx;if(!D)throw new Error("nolib");
+  const {Document,Packer,Paragraph,TextRun,AlignmentType}=D;
+  const F="TH Sarabun New",NAVY="1B2A47",BLUE="2A66B0",GOLD="9A6B0A";
+  const run=(text,o={})=>new TextRun({text,font:F,size:o.size||32,sizeComplexScript:o.size||32,bold:!!o.bold,boldComplexScript:!!o.bold,italics:!!o.italics,italicsComplexScript:!!o.italics,color:o.color});
+  const h=(text,size,color,before=240)=>new Paragraph({spacing:{before,after:80},keepNext:true,children:[run(text,{size,bold:true,color})]});
+  const body=t=>paras(t).map(x=>new Paragraph({spacing:{after:120,line:300},indent:{firstLine:720},alignment:AlignmentType.THAI_DISTRIBUTE||AlignmentType.JUSTIFIED,children:[run(x)]}));
+  const bullet=(label,text)=>new Paragraph({bullet:{level:0},spacing:{after:80,line:300},children:[run(label+": ",{bold:true}),run(text)]});
+  const kids=[
+    new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:60},children:[run(lessonTitle(),{size:44,bold:true,color:NAVY})]}),
+    new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:200},children:[run("หัวข้อ: ",{bold:true,size:36}),run(S.title,{size:36})]}),
+    h("ข้อพระคัมภีร์หลัก (Key Verse)",38,BLUE),
+    new Paragraph({indent:{left:567,right:567},spacing:{after:120,line:300},border:{left:{style:"single",size:24,color:"B9820F",space:10}},children:[run("“"+S.verseText.trim()+"”",{italics:true}),run(" — "+refLabel(),{bold:true,color:GOLD})]}),
+    h("คำนำ (Introduction)",38,BLUE),...body(S.intro),
+    h("บริบทก่อนหน้านี้ (Background & Context)",38,BLUE),...body(S.background),
+    h("เนื้อหาบทเรียน (Lesson Outline)",38,BLUE)];
+  S.points.forEach((p,i)=>{kids.push(h(`ประการที่ ${i+1}: ${p.heading}`,34,NAVY,160),...body(p.body),bullet("ข้อพระคัมภีร์สนับสนุน",p.ref),bullet("บทเรียนสำหรับเรา",p.lesson))});
+  kids.push(h("บทสรุปท้าทายและหนุนใจ (Conclusion & Encouragement)",38,BLUE),...body(S.conclusion),
+    h("คำถามท้าทายและเสริมหนุนผู้เรียน (Discussion Questions)",38,BLUE),...S.questions.map(q=>bullet(q.label,q.text)));
+  const doc=new Document({creator:"เตรียมบทเทศนา",title:lessonTitle(),
+    styles:{default:{document:{run:{font:F,size:32}}}},
+    sections:[{properties:{page:{margin:{top:1134,bottom:1134,left:1304,right:1134}}},children:kids}]});
+  return Packer.toBlob(doc);
+}
+async function downloadDocx(){
+  const name=`บทเรียน_${bName(S.book).replace(/\s/g,"")}_บทที่${S.ch}.docx`;
+  let blob;
+  try{blob=await buildDocx()}catch(e){ui.msg={k:"err",t:"สร้างไฟล์ Word ไม่สำเร็จ ลองเปิดหน้านี้ใหม่อีกครั้ง"};render();return}
+  const dl=window.claude&&window.claude.use?await window.claude.use("downloads").catch(()=>null):null;
+  if(dl){
+    try{await dl.save({filename:name,data:blob});sDone();ui.msg={k:"ok",t:"บันทึกไฟล์ "+name+" แล้ว"}}
+    catch(e){ui.msg=e&&e.code==="declined"?{k:"warn",t:"ยกเลิกการดาวน์โหลดแล้ว"}:{k:"err",t:"ดาวน์โหลดไม่สำเร็จ ลองกดอีกครั้ง"}}
+    render();return;
+  }
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);sDone();ui.msg={k:"ok",t:"กำลังดาวน์โหลด "+name};render();
+}
+
+/* ---------- Boot ---------- */
+render();
+autoGen();
+</script>
+
+</body>
+</html>
