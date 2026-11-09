@@ -144,6 +144,79 @@ function eventItems(list) {
   return list.map((e) => `<div class="item ${e.type === 'it' ? 'it' : ''}"><div class="date-chip"><b style="font-size:18px">${e.type === 'it' ? '💻' : e.type === 'task' ? '✏️' : '📌'}</b><span>${e.start && e.date ? fmtTime(e.start) : 'ทั้งวัน'}</span></div>
     <div><div class="t">${esc(e.title)}</div>${e.start && e.date ? `<div class="s">${fmtTime(e.start)}–${fmtTime(e.end)} น.</div>` : ''}</div></div>`).join('');
 }
+
+// ---------- TASKS (assignments to hand in) ----------
+// Built-in tasks come from schedule.json; extra tasks and "done" ticks live on this device.
+const LS = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (_) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} } };
+let myTasks = LS.get('myTasks', []);
+let doneTasks = new Set(LS.get('tasksDone', []));
+function allTasks() {
+  return [...(data.tasks || []).map((t) => ({ ...t, mine: false })), ...myTasks.map((t) => ({ ...t, mine: true }))]
+    .sort((a, b) => (a.due + (a.time || '23:59')).localeCompare(b.due + (b.time || '23:59')));
+}
+function taskDue(t) {
+  const n = diffDays(state.today, t.due);
+  if (n < 0) return { cls: 'over', text: `เลยกำหนด ${-n} วัน` };
+  if (n === 0) {
+    if (t.time) { const left = toMin(t.time) - bkkNow().minutes; if (left < 0) return { cls: 'over', text: 'เลยเวลาส่งแล้ว' }; return { cls: 'urgent', text: `วันนี้! เหลือ ${durText(left)}` }; }
+    return { cls: 'urgent', text: 'ส่งวันนี้!' };
+  }
+  return { cls: n <= 3 ? 'urgent' : n <= 7 ? 'soon' : '', text: n === 1 ? 'ส่งพรุ่งนี้' : `อีก ${n} วัน` };
+}
+function taskItem(t) {
+  const done = doneTasks.has(t.id), c = data.courses[t.code], due = taskDue(t);
+  return `<div class="task${done ? ' done' : ''} ${done ? '' : due.cls}" style="--cc:${c ? c.color : 'var(--violet)'}">
+    <button class="task-check" data-act="taskdone" data-id="${esc(t.id)}" aria-label="${done ? 'ยังไม่เสร็จ' : 'ส่งแล้ว'}">${done ? '✓' : ''}</button>
+    <div class="task-body">
+      <div class="task-top"><span class="task-code">${t.code ? esc(t.code) : 'ทั่วไป'}</span>${done ? '<span class="task-badge ok">ส่งแล้ว</span>' : `<span class="task-badge ${due.cls}">${due.text}</span>`}</div>
+      <div class="task-title">${esc(t.title)}</div>
+      <div class="task-meta">📅 ส่ง ${thaiDate(t.due, { short: true })}${t.time ? ` • ⏰ ก่อน ${fmtTime(t.time)} น.` : ''}</div>
+      ${t.how ? `<div class="task-how">📤 ${esc(t.how)}</div>` : ''}
+      ${t.mine ? `<button class="task-del" data-act="taskdel" data-id="${esc(t.id)}">ลบงานนี้</button>` : ''}
+    </div></div>`;
+}
+function tasksSection() {
+  const list = allTasks();
+  const todo = list.filter((t) => !doneTasks.has(t.id)), done = list.filter((t) => doneTasks.has(t.id));
+  const opts = Object.entries(data.courses).map(([k, c]) => `<option value="${esc(k)}">${esc(k)} ${esc(c.name)}</option>`).join('');
+  return `<div class="section-title" id="tasksTop">📋 งานที่ยังไม่เสร็จ ${todo.length} งาน</div>
+    <div class="tasks">${todo.length ? todo.map(taskItem).join('') : '<div class="panel small muted" style="text-align:center">🎉 ส่งงานครบหมดแล้ว</div>'}</div>
+    ${done.length ? `<details class="guide task-done"><summary>✅ ส่งแล้ว ${done.length} งาน</summary><div class="tasks">${done.map(taskItem).join('')}</div></details>` : ''}
+    <details class="guide task-add"><summary>➕ เพิ่มงานเอง</summary>
+      <form id="taskForm" class="task-form">
+        <label>ชื่องาน<input name="title" required maxlength="120" placeholder="เช่น ส่งรายงาน Lab ครั้งที่ 1"></label>
+        <label>วิชา<select name="code"><option value="">ทั่วไป</option>${opts}</select></label>
+        <div class="task-row"><label>วันส่ง<input name="due" type="date" required value="${addDays(state.today, 7)}"></label>
+        <label>เวลา (ถ้ามี)<input name="time" type="time"></label></div>
+        <label>ส่งยังไง<input name="how" maxlength="160" placeholder="เช่น อัปโหลดใน MS Teams / ส่งในคาบ"></label>
+        <button class="big-btn" type="submit">➕ บันทึกงาน</button>
+        <div class="small muted">งานที่เพิ่มเองและการติ๊กส่งแล้ว จะบันทึกไว้ในเครื่องนี้ จะแจ้งเตือนผ่าน ntfy ก่อนส่ง 1 วัน (19:00 น.)</div>
+      </form></details>`;
+}
+// Queue ntfy reminders for tasks added on this device (the server only knows the built-in list).
+async function queueMyTaskAlerts() {
+  const now = Math.floor(Date.now() / 1000), cfg = data.ntfy;
+  const jobs = [];
+  for (const t of myTasks) {
+    if (doneTasks.has(t.id)) continue;
+    const msg = `${t.title}\nส่ง ${thaiDate(t.due)}${t.time ? ` ก่อน ${fmtTime(t.time)} น.` : ''}${t.how ? `\nวิธีส่ง: ${t.how}` : ''}`;
+    jobs.push({ at: bkkEpoch(addDays(t.due, -1), cfg.eveningTime) + 5, title: `📋 พรุ่งนี้ส่งงาน${t.code ? ' ' + t.code : ''}`, message: msg, priority: 5 });
+    jobs.push({ at: bkkEpoch(t.due, cfg.morningTime) + 120, title: `📋 วันนี้ส่งงาน${t.code ? ' ' + t.code : ''}`, message: msg, priority: 5 });
+  }
+  const due = jobs.filter((j) => j.at > now + 60 && j.at < now + 3 * 86400 - 600);
+  if (!due.length) return;
+  try {
+    const sent = new Set(LS.get('taskAlertsSent', []).filter((k) => +k.split('|')[0] > now - 86400));
+    for (const j of due) {
+      const key = `${j.at}|${j.title}|${j.message}`;
+      if (sent.has(key)) continue;
+      const r = await fetch(cfg.server, { method: 'POST', body: JSON.stringify({ topic: cfg.topic, title: j.title, message: j.message, priority: j.priority, delay: String(j.at), click: data.siteUrl }) });
+      if (r.ok) sent.add(key);
+    }
+    LS.set('taskAlertsSent', [...sent]);
+  } catch (e) { console.warn('task alerts', e); }
+}
+
 function renderToday() {
   const ds = state.date;
   const info = dayInfo(data, ds);
@@ -156,12 +229,22 @@ function renderToday() {
         <div class="daynav-sub">${thaiDate(ds, { weekday: false })} • ${sub}</div>
         ${!isToday ? '<button class="pill today-btn" data-act="gotoday">⟲ กลับมาวันนี้</button>' : ''}</div>
       <button class="big-arrow" data-act="day" data-n="1" aria-label="วันถัดไป">›</button></div>`;
+  if (isToday) {
+    const todo = allTasks().filter((t) => !doneTasks.has(t.id));
+    if (todo.length) { const t = todo[0], d = taskDue(t);
+      html += `<button class="task-banner ${d.cls}" data-act="totasks"><span class="tb-n">${todo.length}</span><span class="tb-txt"><b>งานที่ยังไม่ได้ส่ง</b><span>ใกล้สุด: ${esc(t.code || 'ทั่วไป')} • ${d.text}</span></span><span class="tb-go">ดู ▾</span></button>`; }
+  }
   html += missionCard(info, minutes);
   if (info.classes.length) {
     html += `<div class="section-title">ตารางเรียน ${info.classes.length} คาบ</div><div class="timeline">${info.classes.map((c) => classCard(c, ds, minutes)).join('')}</div>`;
   } else html += emptyState(info);
   if (info.exams.length) html += `<div class="section-title">สอบ</div><div class="list">${examItems(info.exams)}</div>`;
   if (info.events.length) html += `<div class="section-title">กิจกรรม / วันสำคัญ</div><div class="list">${eventItems(info.events)}</div>`;
+  if (isToday) html += tasksSection();
+  else {
+    const dueHere = allTasks().filter((t) => t.due === ds);
+    if (dueHere.length) html += `<div class="section-title">📋 งานที่ต้องส่งวันนี้</div><div class="tasks">${dueHere.map(taskItem).join('')}</div>`;
+  }
   return html;
 }
 
@@ -205,7 +288,7 @@ function renderMonth() {
     if (ds === state.date && ds !== state.today) cls.push('sel');
     const codes = [...new Set(info.classes.map((c) => c.code))];
     const dots = codes.map((c) => `<i style="--c:${data.courses[c].color}"></i>`).join('');
-    const flag = info.exams.length ? '📝' : info.classes.some((c) => c.isLab) ? '🧪' : info.events.length ? '⭐' : '';
+    const flag = info.exams.length ? '📝' : allTasks().some((t) => t.due === ds && !doneTasks.has(t.id)) ? '📋' : info.classes.some((c) => c.isLab) ? '🧪' : info.events.length ? '⭐' : '';
     cells += `<button class="${cls.join(' ')}" data-act="pickday" data-date="${ds}" aria-label="${thaiDate(ds)}"><span class="n">${d}</span><span class="dots">${dots}</span>${flag ? `<span class="flag">${flag}</span>` : ''}</button>`;
   }
   // month summary: holidays, exams, important days
@@ -223,6 +306,11 @@ function renderMonth() {
       items.push({ ds, html: `<div class="item ${e.type === 'it' ? 'it' : ''}${ds < state.today ? ' past' : ''}">${dateChip(ds)}<div><div class="t">${e.type === 'it' ? '💻' : e.type === 'task' ? '✏️' : '⭐'} ${esc(e.title)}</div><div class="s">${e.start && e.date ? `${fmtTime(e.start)}–${fmtTime(e.end)} น.` : e.end && !e.date ? `ถึง ${thaiDate(e.end, { short: true })}` : ''}</div></div></div>` });
     });
   }
+  allTasks().forEach((tk) => {
+    const [yy, mm] = parseDS(tk.due); if (yy !== y || mm !== m) return;
+    const done = doneTasks.has(tk.id);
+    items.push({ ds: tk.due, html: `<div class="item task-i${done || tk.due < state.today ? ' past' : ''}">${dateChip(tk.due)}<div><div class="t">📋 ส่งงาน ${esc(tk.code)}${done ? ' ✅' : ''}</div><div class="s">${esc(tk.title)}${tk.time ? ` • ก่อน ${fmtTime(tk.time)} น.` : ''}</div></div></div>` });
+  });
   const t = data.term;
   [[t.midterm.start, t.midterm.label], [t.final.start, t.final.label], [t.classStart, ''], [t.classEnd, 'วันเรียนวันสุดท้ายของภาค']].forEach(([ds, label]) => {
     if (!label) return;
@@ -291,6 +379,7 @@ function renderAlerts() {
       • ${cfg.morningTime} น. สรุปคาบเรียนของวันนี้<br>
       • ก่อนเรียนทุกคาบ ${cfg.leadMinutes} นาที พร้อมหัวข้อที่จะเรียนจากคอร์สซิลลาบัส<br>
       • ${cfg.eveningTime} น. ของวันก่อนหน้า: วันหยุดพิเศษ (ที่ไม่ใช่เสาร์–อาทิตย์) และวันว่างในตาราง<br>
+      • งานที่ต้องส่ง: ${cfg.eveningTime} น. ล่วงหน้า 3 วัน และ 1 วัน + เช้าวันส่ง<br>
       • วันเรียน Lab (ห้อง ${data.labRooms.join(', ')}) และอบรม IT: ล่วงหน้า ${cfg.labRemindDays.join(' และ ')} วัน<br>
       • วันสอบ: ล่วงหน้า ${cfg.examRemindDays.join(' และ ')} วัน และก่อนสอบ 1 ชม.</div>
     </details>`;
@@ -383,11 +472,31 @@ view.addEventListener('click', async (e) => {
     sfx.tap();
     try { await navigator.clipboard.writeText(data.ntfy.topic); b.textContent = '✅ คัดลอกแล้ว'; }
     catch (_) { const sel = getSelection(); const rg = document.createRange(); rg.selectNodeContents($('#topicBox')); sel.removeAllRanges(); sel.addRange(rg); b.textContent = 'เลือกข้อความแล้ว กดคัดลอกได้เลย'; }
+  } else if (act === 'totasks') {
+    sfx.tap(); const el = $('#tasksTop'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else if (act === 'taskdone') {
+    const id = b.dataset.id;
+    if (doneTasks.has(id)) { doneTasks.delete(id); sfx.blip(-1); } else { doneTasks.add(id); sfx.chime(); }
+    LS.set('tasksDone', [...doneTasks]); render(false);
+  } else if (act === 'taskdel') {
+    if (!confirm('ลบงานนี้?')) return;
+    sfx.tap(); myTasks = myTasks.filter((t) => t.id !== b.dataset.id); doneTasks.delete(b.dataset.id);
+    LS.set('myTasks', myTasks); LS.set('tasksDone', [...doneTasks]); render(false);
   } else if (act === 'test') {
     sfx.tap(); runTest(b);
   } else if (act === 'sound') {
     const on = !sfx.enabled; sfx.set(on); sfx.toggle(on); b.classList.toggle('on', on); updateSoundBtn();
   }
+});
+
+view.addEventListener('submit', (e) => {
+  if (e.target.id !== 'taskForm') return;
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const t = { id: 'my-' + Date.now().toString(36), code: f.get('code') || '', title: String(f.get('title')).trim(), due: f.get('due'), time: f.get('time') || '', how: String(f.get('how') || '').trim() };
+  if (!t.title || !/^\d{4}-\d{2}-\d{2}$/.test(t.due)) return;
+  myTasks.push(t); LS.set('myTasks', myTasks);
+  sfx.chime(); render(false); queueMyTaskAlerts();
 });
 
 // swipe left/right on the Today view to change day
@@ -442,6 +551,7 @@ async function init() {
   tick();
   render(true);
   setInterval(tick, 1000);
+  queueMyTaskAlerts();
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 init().catch((err) => { view.innerHTML = `<section class="panel">โหลดข้อมูลไม่สำเร็จ: ${esc(err.message)}</section>`; });

@@ -335,3 +335,55 @@ h1.view-title { font-size: 26px; margin: 4px 4px 12px; font-weight: 700; }
 .sp-cell b { display: block; font-family: 'Orbitron', sans-serif; font-size: 26px; font-weight: 800; color: #fff; text-shadow: 0 0 14px rgba(244,114,182,.8); font-variant-numeric: tabular-nums; }
 .sp-cell span { font-size: 12px; color: #f9c4dd; }
 .sp-today { font-family: 'Prompt', sans-serif; font-size: 30px; font-weight: 700; color: #fff; }
+
+/* Assignments */
+.tasks { display: grid; gap: 10px; }
+.task {
+  display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: start;
+  padding: 14px 14px 14px 12px; border-radius: 18px; background: var(--panel-strong);
+  border: 1px solid var(--line); border-left: 4px solid var(--cc);
+}
+.task.soon { border-color: rgba(251,191,36,.35); border-left-color: var(--cc); }
+.task.urgent { border-color: rgba(251,113,133,.55); border-left-color: var(--cc); box-shadow: 0 0 22px rgba(251,113,133,.14); }
+.task.over { border-color: rgba(251,113,133,.8); border-left-color: var(--red); background: rgba(60,14,28,.7); }
+.task.done { opacity: .55; }
+.task.done .task-title { text-decoration: line-through; }
+.task-check {
+  width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center;
+  border: 2px solid var(--line-strong); background: rgba(255,255,255,.04);
+  font-size: 26px; font-weight: 800; color: #052e16; transition: transform .15s, background .2s;
+}
+.task-check:active { transform: scale(.85); }
+.task.done .task-check { background: var(--green); border-color: transparent; box-shadow: 0 0 16px rgba(74,222,128,.45); }
+.task-body { min-width: 0; }
+.task-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.task-code { font-family: 'Orbitron', sans-serif; font-size: 13px; color: var(--cc); letter-spacing: .04em; }
+.task-badge { font-size: 12.5px; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.06); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+.task-badge.soon { color: var(--amber); border-color: rgba(251,191,36,.5); }
+.task-badge.urgent, .task-badge.over { color: #fff; background: rgba(251,113,133,.85); border-color: transparent; }
+.task-badge.ok { color: #052e16; background: var(--green); border-color: transparent; }
+.task-title { font-family: 'Prompt', 'IBM Plex Sans Thai Looped', sans-serif; font-weight: 600; margin: 4px 0 2px; line-height: 1.35; }
+.task-meta { font-size: 14px; color: var(--text); }
+.task-how { font-size: 13.5px; color: var(--muted); margin-top: 4px; line-height: 1.45; }
+.task-del { margin-top: 8px; font-size: 13px; color: var(--red); background: none; border: 1px solid rgba(251,113,133,.4); border-radius: 999px; padding: 4px 12px; }
+details.task-done, details.task-add { margin-top: 12px; }
+details.task-done .tasks { margin-top: 10px; }
+.task-form { display: grid; gap: 10px; margin-top: 10px; }
+.task-form label { display: grid; gap: 4px; font-size: 14px; color: var(--muted); }
+.task-form input, .task-form select {
+  width: 100%; min-height: 46px; padding: 10px 12px; border-radius: 14px; font: inherit; font-size: 16px;
+  color: var(--text); background: rgba(255,255,255,.05); border: 1px solid var(--line); color-scheme: dark;
+}
+.task-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.item.task-i .date-chip { border-color: rgba(167,139,250,.6); color: var(--violet); }
+.task-banner {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; margin-bottom: 14px;
+  padding: 10px 14px; border-radius: 18px; background: var(--panel-strong); border: 1px solid rgba(167,139,250,.45); color: var(--text);
+}
+.task-banner.urgent, .task-banner.over { border-color: rgba(251,113,133,.7); box-shadow: 0 0 18px rgba(251,113,133,.15); }
+.tb-n { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-family: 'Orbitron', sans-serif; font-weight: 700; color: #1a0b2e; background: var(--violet); }
+.task-banner.urgent .tb-n, .task-banner.over .tb-n { background: var(--red); color: #fff; }
+.tb-txt { flex: 1; min-width: 0; display: grid; }
+.tb-txt b { font-family: 'Prompt', sans-serif; font-weight: 600; }
+.tb-txt span { font-size: 13.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tb-go { color: var(--cyan); font-size: 14px; flex: none; }

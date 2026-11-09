@@ -205,6 +205,21 @@ export function buildNotifications(data, ds) {
       tags: [e.type === 'it' ? 'computer' : 'pushpin'], priority: 4,
     }));
   }
+  // Assignments: heads-up 3 days and 1 day before (evening), plus the morning of the due day
+  const taskList = data.tasks || [];
+  for (const n of [3, 1]) {
+    const target = addDays(ds, n);
+    taskList.filter((t) => t.due === target).forEach((t) => evening({
+      title: `📋 ${n === 1 ? 'พรุ่งนี้' : `อีก ${n} วัน`}ส่งงาน${t.code ? ' ' + t.code : ''}`,
+      message: `${t.title}\nส่ง ${thaiDate(target)}${t.time ? ` ก่อน ${fmtTime(t.time)} น.` : ''}${t.how ? `\nวิธีส่ง: ${t.how}` : ''}`,
+      priority: n === 1 ? 5 : 4,
+    }));
+  }
+  taskList.filter((t) => t.due === ds).forEach((t, i) => push(ds, toMin(cfg.morningTime) + 1 + i, {
+    title: `📋 วันนี้ส่งงาน${t.code ? ' ' + t.code : ''}`,
+    message: `${t.title}${t.time ? `\nก่อน ${fmtTime(t.time)} น.` : ''}${t.how ? `\nวิธีส่ง: ${t.how}` : ''}`,
+    priority: 5,
+  }));
   // Special day (e.g. birthday): one heads-up a week before
   if (data.special) {
     const sp = data.special, n = sp.remindDays || 7;
