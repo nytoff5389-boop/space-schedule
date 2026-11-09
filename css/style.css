@@ -387,3 +387,10 @@ details.task-done .tasks { margin-top: 10px; }
 .tb-txt b { font-family: 'Prompt', sans-serif; font-weight: 600; }
 .tb-txt span { font-size: 13.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tb-go { color: var(--cyan); font-size: 14px; flex: none; }
+.cc-quiz { margin-top: 8px; padding: 9px 12px; border-radius: 14px; font-size: 14px; line-height: 1.45; background: rgba(74,222,128,.08); border: 1px solid rgba(74,222,128,.35); color: var(--text); }
+.cc-quiz b { display: block; color: var(--green); font-family: 'Prompt', sans-serif; font-weight: 600; }
+.cc-quiz.yes { background: rgba(251,191,36,.12); border-color: rgba(251,191,36,.6); }
+.cc-quiz.yes b { color: var(--amber); }
+.cc-quiz.maybe { background: rgba(251,191,36,.07); border-color: rgba(251,191,36,.35); border-style: dashed; }
+.cc-quiz.maybe b { color: var(--amber); }
+.cc-quiz small { display: block; color: var(--muted); font-size: 12.5px; }

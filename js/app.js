@@ -88,6 +88,7 @@ function classCard(c, ds, nowMin) {
         ${c.kind && !c.isLab ? `<span class="pill kind">${esc(c.kind)}</span>` : ''}
       </div>
       ${topic}
+      ${c.isLab ? `<div class="cc-quiz${c.quiz ? (c.quiz.sure ? ' yes' : ' maybe') : ''}">${c.quiz ? `<b>📝 ${c.quiz.sure ? 'มีควิซหลังแล็บ' : 'อาจมีควิซหลังแล็บ'}</b>เรื่อง ${esc(c.quiz.topic)}${c.quiz.sure ? '' : '<small>ซิลลาบัสระบุไม่ตรงกัน 2 จุด ถามอาจารย์อีกที</small>'}` : `<b>✅ ไม่มีควิซ</b>${esc(c.labNote || '')}`}</div>` : ''}
     </div>
   </article>`;
 }

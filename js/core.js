@@ -76,10 +76,20 @@ export function weekOfTerm(data, ds) {
   return n < 0 ? 0 : Math.floor(n / 7) + 1;
 }
 
+/** One-line quiz status for a lab class. */
+export function quizLine(c) {
+  if (!c.isLab) return '';
+  if (c.quiz) return `📝 ${c.quiz.sure ? 'มีควิซหลังแล็บ' : 'อาจมีควิซหลังแล็บ'}: ${c.quiz.topic}`;
+  return `✅ ไม่มีควิซ${c.labNote ? ' • ' + c.labNote : ''}`;
+}
+
 export function slotWithDetails(data, slot, ds) {
   const course = data.courses[slot.code] || { name: slot.code, color: '#93c5fd' };
   const topic = ds && data.topics[slot.code] ? data.topics[slot.code][ds] || '' : '';
-  return { ...slot, course, topic, hasSyllabus: !!course.syllabus, isLab: isLabRoom(data, slot.room) };
+  const isLab = isLabRoom(data, slot.room);
+  const quiz = isLab && ds ? (data.labQuiz?.[slot.code]?.[ds] || null) : null;
+  const labNote = isLab ? (data.labNote?.[slot.code] || '') : '';
+  return { ...slot, course, topic, hasSyllabus: !!course.syllabus, isLab, quiz, labNote };
 }
 
 /** Everything about one day. */
@@ -181,8 +191,8 @@ export function buildNotifications(data, ds) {
   [...cfg.labRemindDays].sort((a, b) => b - a).forEach((n) => {
     const info = dayInfo(data, addDays(ds, n));
     info.classes.filter((c) => c.isLab).forEach((c) => evening({
-      title: `🧪 ${n === 1 ? 'พรุ่งนี้' : `อีก ${n} วัน`} มี Lab: ${c.code} ${c.course.name}`,
-      message: `${thaiDate(info.date)} ${fmtTime(c.start)}–${fmtTime(c.end)} น. • ห้อง ${c.room}` + (c.topic ? `\nหัวข้อ: ${c.topic}` : '') + '\nเตรียมเสื้อกาวน์/สมุดแล็บให้พร้อม',
+      title: `🧪 ${n === 1 ? 'พรุ่งนี้' : `อีก ${n} วัน`} มี Lab${c.quiz ? (c.quiz.sure ? ' + ควิซ' : ' (อาจมีควิซ)') : ''}: ${c.code} ${c.course.name}`,
+      message: `${thaiDate(info.date)} ${fmtTime(c.start)}–${fmtTime(c.end)} น. • ห้อง ${c.room}` + (c.topic ? `\nหัวข้อ: ${c.topic}` : '') + `\n${quizLine(c)}` + '\nเตรียมเสื้อกาวน์/สมุดแล็บให้พร้อม',
       tags: ['test_tube'], priority: 4,
     }));
   });
