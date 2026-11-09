@@ -2,10 +2,9 @@ name: ntfy notifications
 
 on:
   schedule:
-    # 04:00 Bangkok (21:00 UTC). A second run at 05:45 Bangkok is a backup in case
-    # GitHub delays the first one; already-scheduled messages are skipped.
-    - cron: '0 21 * * *'
-    - cron: '45 22 * * *'
+    # Every 4 hours. GitHub often starts scheduled jobs hours late, so each run
+    # queues the next 3 days; already-queued messages are skipped.
+    - cron: '17 */4 * * *'
   workflow_dispatch:
     inputs:
       test:
@@ -39,8 +38,8 @@ jobs:
         # so record a tiny heartbeat commit on the 1st and 15th of each month.
         if: github.event_name == 'schedule'
         run: |
-          d=$(TZ=Asia/Bangkok date +%d)
-          if [ "$d" = "01" ] || [ "$d" = "15" ]; then
+          d=$(TZ=Asia/Bangkok date +%d); h=$(TZ=Asia/Bangkok date +%H)
+          if { [ "$d" = "01" ] || [ "$d" = "15" ]; } && [ "$h" -lt 12 ]; then
             TZ=Asia/Bangkok date -Iseconds > .heartbeat
             git config user.name github-actions
             git config user.email github-actions@users.noreply.github.com
