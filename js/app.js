@@ -179,7 +179,7 @@ function tasksSection() {
   const list = allTasks();
   const todo = list.filter((t) => !doneTasks.has(t.id)), done = list.filter((t) => doneTasks.has(t.id));
   const opts = Object.entries(data.courses).map(([k, c]) => `<option value="${esc(k)}">${esc(k)} ${esc(c.name)}</option>`).join('');
-  return `<div class="section-title" id="tasksTop">📋 งานที่ยังไม่เสร็จ ${todo.length} งาน</div>
+  return `<div class="section-title" id="tasksTop">📋 งานที่มอบหมาย (MS Teams) ยังไม่ส่ง ${todo.length} งาน</div>
     <div class="tasks">${todo.length ? todo.map(taskItem).join('') : '<div class="panel small muted" style="text-align:center">🎉 ส่งงานครบหมดแล้ว</div>'}</div>
     ${done.length ? `<details class="guide task-done"><summary>✅ ส่งแล้ว ${done.length} งาน</summary><div class="tasks">${done.map(taskItem).join('')}</div></details>` : ''}
     <details class="guide task-add"><summary>➕ เพิ่มงานเอง</summary>
@@ -232,7 +232,7 @@ function renderToday() {
   if (isToday) {
     const todo = allTasks().filter((t) => !doneTasks.has(t.id));
     if (todo.length) { const t = todo[0], d = taskDue(t);
-      html += `<button class="task-banner ${d.cls}" data-act="totasks"><span class="tb-n">${todo.length}</span><span class="tb-txt"><b>งานที่ยังไม่ได้ส่ง</b><span>ใกล้สุด: ${esc(t.code || 'ทั่วไป')} • ${d.text}</span></span><span class="tb-go">ดู ▾</span></button>`; }
+      html += `<button class="task-banner ${d.cls}" data-act="totasks"><span class="tb-n">${todo.length}</span><span class="tb-txt"><b>งานที่มอบหมายใน Teams</b><span>ใกล้สุด: ${esc(t.code || 'ทั่วไป')} • ${d.text}</span></span><span class="tb-go">ดู ▾</span></button>`; }
   }
   html += missionCard(info, minutes);
   if (info.classes.length) {
