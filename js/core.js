@@ -108,7 +108,28 @@ export function dayInfo(data, ds) {
   else if (phase !== 'class') reason = phase;
   else if (!regular.length) reason = 'free';
   else classes = regular.map((s) => slotWithDetails(data, s, ds));
-  return { date: ds, dow: d, weekend, holidays, phase, exams, events, classes, reason, week: weekOfTerm(data, ds) };
+  // One-off changes announced by teachers: cancelled or extra/moved sessions
+  const changes = (data.changes || []).filter((x) => x.date === ds);
+  const cancelled = [];
+  changes.filter((x) => x.cancel).forEach((x) => {
+    classes = classes.filter((k) => {
+      const hit = k.code === x.code && (!x.start || k.start === x.start);
+      if (hit) cancelled.push({ ...k, note: x.note || '' });
+      return !hit;
+    });
+  });
+  const extras = changes.filter((x) => !x.cancel && !weekend && !holidays.length);
+  if (extras.length) {
+    extras.forEach((x) => {
+      const k = slotWithDetails(data, { day: d, code: x.code, start: x.start, end: x.end, room: x.room || '', kind: x.kind || '' }, ds);
+      if (x.topic) k.topic = x.topic;
+      classes.push({ ...k, extra: true, note: x.note || '' });
+    });
+    classes.sort((a, b) => toMin(a.start) - toMin(b.start));
+    reason = '';
+  }
+  if (!classes.length && !reason) reason = 'free';
+  return { date: ds, dow: d, weekend, holidays, phase, exams, events, classes, cancelled, reason, week: weekOfTerm(data, ds) };
 }
 
 /** First day on/after `ds` (exclusive if `strict`) that has classes, within 120 days. */
@@ -186,6 +207,17 @@ export function buildNotifications(data, ds) {
       message: tomorrow.classes.map((c) => `${fmtTime(c.start)} ${c.code} ${c.course.name} • ${c.room}`).join('\n'),
       priority: 4,
     });
+  }
+  // Teacher-announced changes for tomorrow (cancelled / extra sessions)
+  {
+    const tm = dayInfo(data, addDays(ds, 1));
+    tm.cancelled.forEach((k) => evening({
+      title: `🚫 พรุ่งนี้ ${k.code} งดเรียน`, message: `${k.course.name} ${fmtTime(k.start)} น.${k.note ? `\n${k.note}` : ''}`, priority: 4,
+    }));
+    tm.classes.filter((k) => k.extra).forEach((k) => evening({
+      title: `⚡ พรุ่งนี้ ${k.code} มีเรียนนัดพิเศษ ${fmtTime(k.start)}–${fmtTime(k.end)} น.`,
+      message: `${k.course.name}${k.room ? ` • ห้อง ${k.room}` : ''}${k.topic ? `\nหัวข้อ: ${k.topic}` : ''}${k.note ? `\n${k.note}` : ''}`, priority: 4,
+    }));
   }
   // Labs N days ahead
   [...cfg.labRemindDays].sort((a, b) => b - a).forEach((n) => {

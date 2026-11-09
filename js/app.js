@@ -86,7 +86,9 @@ function classCard(c, ds, nowMin) {
         <span class="pill">📍 ${esc(c.room)}</span>
         ${c.isLab ? '<span class="pill lab">🧪 LAB</span>' : ''}
         ${c.kind && !c.isLab ? `<span class="pill kind">${esc(c.kind)}</span>` : ''}
+        ${c.extra ? '<span class="pill extra">⚡ นัดพิเศษ</span>' : ''}
       </div>
+      ${c.note ? `<div class="cc-note">📢 ${esc(c.note)}</div>` : ''}
       ${topic}
       ${c.isLab ? `<div class="cc-quiz${c.quiz ? (c.quiz.sure ? ' yes' : ' maybe') : ''}">${c.quiz ? `<b>📝 ${c.quiz.sure ? 'มีควิซหลังแล็บ' : 'อาจมีควิซหลังแล็บ'}</b>เรื่อง ${esc(c.quiz.topic)}${c.quiz.sure ? '' : '<small>ซิลลาบัสระบุไม่ตรงกัน 2 จุด ถามอาจารย์อีกที</small>'}` : `<b>✅ ไม่มีควิซ</b>${esc(c.labNote || '')}`}</div>` : ''}
     </div>
@@ -239,6 +241,7 @@ function renderToday() {
   if (info.classes.length) {
     html += `<div class="section-title">ตารางเรียน ${info.classes.length} คาบ</div><div class="timeline">${info.classes.map((c) => classCard(c, ds, minutes)).join('')}</div>`;
   } else html += emptyState(info);
+  if (info.cancelled.length) html += `<div class="section-title">งดเรียน</div><div class="list">${info.cancelled.map((k) => `<div class="item cancel"><div class="date-chip"><b style="font-size:18px">🚫</b><span>${fmtTime(k.start)}</span></div><div><div class="t" style="color:${k.course.color}">${esc(k.code)} ${esc(k.course.name)}</div><div class="s">${esc(k.note || 'งดเรียนวันนี้')}</div></div></div>`).join('')}</div>`;
   if (info.exams.length) html += `<div class="section-title">สอบ</div><div class="list">${examItems(info.exams)}</div>`;
   if (info.events.length) html += `<div class="section-title">กิจกรรม / วันสำคัญ</div><div class="list">${eventItems(info.events)}</div>`;
   if (isToday) html += tasksSection();

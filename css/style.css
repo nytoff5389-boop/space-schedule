@@ -394,3 +394,7 @@ details.task-done .tasks { margin-top: 10px; }
 .cc-quiz.maybe { background: rgba(251,191,36,.07); border-color: rgba(251,191,36,.35); border-style: dashed; }
 .cc-quiz.maybe b { color: var(--amber); }
 .cc-quiz small { display: block; color: var(--muted); font-size: 12.5px; }
+.pill.extra { color: #1a1200; background: var(--amber); border-color: transparent; font-weight: 700; }
+.cc-note { margin-top: 8px; font-size: 13.5px; color: var(--amber); }
+.item.cancel .date-chip { border-color: rgba(251,113,133,.6); color: var(--red); }
+.item.cancel .t { text-decoration: line-through; text-decoration-color: rgba(251,113,133,.7); }
