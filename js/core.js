@@ -118,7 +118,7 @@ export function dayInfo(data, ds) {
       return !hit;
     });
   });
-  const extras = changes.filter((x) => !x.cancel && !weekend && !holidays.length);
+  const extras = changes.filter((x) => !x.cancel && !weekend); // teacher may schedule a class on a public holiday
   if (extras.length) {
     extras.forEach((x) => {
       const k = slotWithDetails(data, { day: d, code: x.code, start: x.start, end: x.end, room: x.room || '', kind: x.kind || '' }, ds);
@@ -188,7 +188,8 @@ export function buildNotifications(data, ds) {
   if (newHolidays.length) {
     evening({
       title: `🎉 พรุ่งนี้วันหยุด: ${newHolidays.map((h) => h.name).join(' / ')}`,
-      message: newHolidays.map((h) => (h.start ? `หยุด ${thaiDate(h.start, { short: true })} – ${thaiDate(h.end, { short: true })}` : thaiDate(h.date)) + (h.note ? `\nℹ️ ${h.note}` : '')).join('\n'),
+      message: newHolidays.map((h) => (h.start ? `หยุด ${thaiDate(h.start, { short: true })} – ${thaiDate(h.end, { short: true })}` : thaiDate(h.date)) + (h.note ? `\nℹ️ ${h.note}` : '')).join('\n')
+        + (tomorrow.classes.length ? `\n⚠️ แต่มีนัดเรียน: ${tomorrow.classes.map((k) => `${k.code} ${fmtTime(k.start)}–${fmtTime(k.end)} น.`).join(', ')}` : ''),
       tags: ['tada'], priority: 4,
     });
   } else if (cfg.notifyFreeWeekday && tomorrow.reason === 'free') {
