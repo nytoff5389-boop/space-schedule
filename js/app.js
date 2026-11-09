@@ -89,6 +89,7 @@ function classCard(c, ds, nowMin) {
         ${c.extra ? '<span class="pill extra">⚡ นัดพิเศษ</span>' : ''}
       </div>
       ${c.note ? `<div class="cc-note">📢 ${esc(c.note)}</div>` : ''}
+      ${data.courseDetail?.[c.code] ? `<button class="pill cd-open" data-act="course" data-code="${esc(c.code)}">📊 CLO & สัดส่วนคะแนน</button>` : ''}
       ${topic}
       ${c.isLab ? `<div class="cc-quiz${c.quiz ? (c.quiz.sure ? ' yes' : ' maybe') : ''}">${c.quiz ? `<b>📝 ${c.quiz.sure ? 'มีควิซหลังแล็บ' : 'อาจมีควิซหลังแล็บ'}</b>เรื่อง ${esc(c.quiz.topic)}${c.quiz.sure ? '' : '<small>ซิลลาบัสระบุไม่ตรงกัน 2 จุด ถามอาจารย์อีกที</small>'}` : `<b>✅ ไม่มีควิซ</b>${esc(c.labNote || '')}`}</div>` : ''}
     </div>
@@ -341,12 +342,74 @@ function renderExams() {
   const next = upcoming[0];
   const noInfo = Object.entries(data.courses).filter(([c]) => !data.exams.some((x) => x.code === c)).map(([c, v]) => `${c} ${v.name}`);
   const t = data.term;
-  return `<h1 class="view-title">ตารางสอบ</h1>
+  const details = Object.keys(data.courseDetail || {}).map((k) => `<button class="big-btn cd-btn" data-act="course" data-code="${esc(k)}">📊 ${esc(k)} ${esc(data.courses[k].name)}: CLO & สัดส่วนคะแนน</button>`).join('');
+  return `<h1 class="view-title">ตารางสอบ</h1>${details}
     ${next ? `<section class="panel mission"><div class="mission-label">☄️ สอบถัดไป</div><div class="mission-main"><div class="mission-course">${esc(next.code)} ${esc(next.course.name)}</div><div class="mission-count">${relDay(next.date)}</div></div><div class="mission-sub">${thaiDate(next.date)} • ${fmtTime(next.start)}–${fmtTime(next.end)} น.<br>${esc(next.title)}</div></section>` : ''}
     <section class="panel small"><b>🗓️ ช่วงสอบของมหาวิทยาลัย</b><br>สอบกลางภาค: ${thaiDate(t.midterm.start, { short: true })} – ${thaiDate(t.midterm.end, { short: true })}<br>สอบปลายภาค: ${thaiDate(t.final.start, { short: true })} – ${thaiDate(t.final.end, { short: true })}</section>
     <div class="section-title">กำลังจะมาถึง (${upcoming.length})</div><div class="list">${examItems(upcoming, true) || '<div class="panel muted">ไม่มีสอบที่เหลือแล้ว 🎉</div>'}</div>
     ${noInfo.length ? `<div class="section-title">ยังไม่มีข้อมูลวันสอบ</div><section class="panel small muted">${noInfo.map(esc).join('<br>')}<br><span style="color:var(--dim)">(ยังไม่มีคอร์สซิลลาบัส / ตารางสอบของวิชาเหล่านี้)</span></section>` : ''}
     ${past.length ? `<div class="section-title">สอบไปแล้ว</div><div class="list">${examItems(past, true)}</div>` : ''}`;
+}
+
+
+// ---------- COURSE DETAIL (score structure) ----------
+const f2 = (n) => (Math.round(n * 100) / 100).toString();
+function renderCourse() {
+  const code = state.course, c = data.courses[code], d = data.courseDetail?.[code];
+  if (!d) { state.view = 'today'; return renderToday(); }
+  const allHours = d.parts.reduce((s, p) => s + p.topics.reduce((t, x) => t + x.hours, 0), 0);
+  const saved = LS.get('scores-' + code, {});
+  const parts = d.parts.map((p, pi) => {
+    const hrs = p.topics.reduce((t, x) => t + x.hours, 0);
+    const perHr = p.full / hrs, pctHr = p.pct / hrs;
+    const rows = p.topics.map((x) => `<tr><td><b>${x.n}</b></td><td>${esc(x.title)}<div class="cd-sub">📅 ${esc(x.dates)} • ${esc(x.clo)}</div></td><td>${x.hours}</td><td>${f2(x.hours * perHr)}</td><td><b>${f2(x.hours * pctHr)}%</b></td></tr>`).join('');
+    return `<section class="panel cd-part">
+      <div class="cd-head"><div><b>${esc(p.name)}</b><div class="cd-sub">${esc(p.when)}</div></div><div class="cd-big">${p.pct}%</div></div>
+      <div class="cd-rate">⏱ ${hrs} ชม. • เต็ม ${p.full} คะแนน • <b>1 ชม. = ${f2(perHr)} คะแนน = ${f2(pctHr)}%</b> ของเกรด</div>
+      <div class="cd-scroll"><table class="cd-table"><thead><tr><th>#</th><th>หัวข้อ</th><th>ชม.</th><th>คะแนน</th><th>% เกรด</th></tr></thead>
+      <tbody>${rows}</tbody><tfoot><tr><td></td><td>รวม${esc(p.name)}</td><td>${hrs}</td><td>${p.full}</td><td>${p.pct}%</td></tr></tfoot></table></div>
+      <label class="cd-in">คะแนนที่ได้ (เต็ม ${p.full})<input type="number" inputmode="decimal" min="0" max="${p.full}" step="0.5" data-score="p${pi}" value="${saved['p' + pi] ?? ''}" placeholder="ยังไม่สอบ"></label>
+    </section>`;
+  }).join('');
+  const others = d.others.map((o, oi) => `<tr><td>${esc(o.name)}<div class="cd-sub">${esc(o.clo)}</div></td><td>${o.full}</td><td><b>${o.pct}%</b></td><td><input type="number" inputmode="decimal" min="0" max="${o.full}" step="0.5" data-score="o${oi}" value="${saved['o' + oi] ?? ''}" placeholder="-"></td></tr>`).join('');
+  const sumRows = [...d.parts.map((p) => [p.name, p.full, p.pct]), ...d.others.map((o) => [o.name, o.full, o.pct])];
+  const totalPct = sumRows.reduce((s, r) => s + r[2], 0);
+  return `<div class="daynav"><button class="big-arrow" data-act="back" aria-label="กลับ">‹</button>
+      <div class="daynav-center"><div class="daynav-day" style="color:${c.color}">${esc(code)}</div><div class="daynav-sub">${esc(c.name)} • ${esc(d.credits)} หน่วยกิต</div></div><div style="width:56px"></div></div>
+    <section class="panel cd-total">
+      <div class="cd-sub">สัดส่วนคะแนนทั้งวิชา</div>
+      <div class="cd-bar">${sumRows.map((r, i) => `<span style="flex:${r[2]};--h:${[200, 280, 150, 40][i % 4]}">${r[2]}%</span>`).join('')}</div>
+      <table class="cd-table cd-sum"><thead><tr><th>ส่วน</th><th>เต็ม</th><th>% เกรด</th><th>1 คะแนน =</th></tr></thead>
+      <tbody>${sumRows.map((r) => `<tr><td>${esc(r[0])}</td><td>${r[1]}</td><td><b>${r[2]}%</b></td><td>${f2(r[2] / r[1])}%</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td>รวม</td><td>${sumRows.reduce((s, r) => s + r[1], 0)}</td><td>${totalPct}%</td><td></td></tr></tfoot></table>
+      <div class="cd-sub" style="margin-top:6px">เรียนทั้งหมด ${allHours} ชม. • ทุกหัวข้อวัด CLO1 (ทักษะคำนวณ ผ่านการสอบ) และ CLO2 (ความรับผิดชอบ)</div>
+    </section>
+    <section class="panel cd-calc"><div class="cd-head"><b>🧮 คะแนนของฉันตอนนี้</b><div class="cd-big" id="cdNow">–</div></div><div class="cd-sub" id="cdGrade">กรอกคะแนนที่ได้ในแต่ละส่วนด้านล่าง ระบบคำนวณ % และเกรดให้ (บันทึกในเครื่องนี้)</div></section>
+    <div class="section-title">CLO ของวิชา</div>
+    <section class="panel small">${d.clos.map((x) => `<div class="cd-clo"><b>${esc(x.id)}</b> ${esc(x.text)}<div class="cd-sub">วัดผล: ${esc(x.measure)}</div></div>`).join('')}</section>
+    <div class="section-title">คะแนนแต่ละหัวข้อ</div>
+    ${parts}
+    <section class="panel cd-part"><div class="cd-head"><b>คะแนนเก็บอื่น ๆ</b><div class="cd-big">10%</div></div>
+      <div class="cd-scroll"><table class="cd-table"><thead><tr><th>ส่วน</th><th>เต็ม</th><th>%</th><th>ได้</th></tr></thead><tbody>${others}</tbody></table></div></section>
+    <div class="section-title">เกณฑ์เกรด</div>
+    <section class="panel small"><div class="cd-grades">${d.grades.map((g, i) => `<span><b>${g[1]}</b>${i === 0 ? `> ${g[0]}` : g[0] ? `${g[0]}–${d.grades[i - 1][0] - 0.01}` : `< ${d.grades[i - 1][0]}`}</span>`).join('')}</div>
+      ${d.rules.map((r) => `<div>• ${esc(r)}</div>`).join('')}</section>
+    <div class="small muted" style="text-align:center;margin:10px 0 4px">ผู้สอน: ${esc(d.teachers)}</div>`;
+}
+function updateCourseCalc() {
+  const code = state.course, d = data.courseDetail?.[code]; if (!d) return;
+  const vals = {}; let got = 0, possible = 0;
+  view.querySelectorAll('[data-score]').forEach((i) => {
+    const k = i.dataset.score, v = parseFloat(i.value);
+    const item = k[0] === 'p' ? d.parts[+k.slice(1)] : d.others[+k.slice(1)];
+    if (!isNaN(v)) { const vv = Math.max(0, Math.min(item.full, v)); vals[k] = vv; got += vv / item.full * item.pct; possible += item.pct; }
+  });
+  LS.set('scores-' + code, vals);
+  const now = $('#cdNow'), gr = $('#cdGrade'); if (!now) return;
+  if (!possible) { now.textContent = '–'; return; }
+  const gradeOf = (v) => d.grades.find((x, i) => (i === 0 ? v > x[0] : v >= x[0]))[1];
+  now.textContent = `${f2(got)}%`;
+  gr.innerHTML = `ได้ ${f2(got)} จาก ${possible}% ที่ประเมินแล้ว${possible < 100 ? ` • ส่วนที่เหลืออีก ${100 - possible}%` : ` • เกรด <b>${gradeOf(got)}</b>`}<br>ถ้าส่วนที่เหลือได้เปอร์เซ็นต์เท่าเดิม ≈ <b>${f2(got / possible * 100)}%</b> (${gradeOf(got / possible * 100)})`;
 }
 
 // ---------- ALERTS ----------
@@ -420,9 +483,10 @@ async function runTest(btn) {
 }
 
 // ---------- render / navigation ----------
-const renderers = { today: renderToday, week: renderWeek, month: renderMonth, exams: renderExams, alerts: renderAlerts };
+const renderers = { course: renderCourse, today: renderToday, week: renderWeek, month: renderMonth, exams: renderExams, alerts: renderAlerts };
 function render(animate = true) {
   view.innerHTML = renderers[state.view]();
+  if (state.view === 'course') updateCourseCalc();
   document.querySelectorAll('.nav-btn').forEach((b) => b.classList.toggle('active', b.dataset.view === state.view));
   if (animate) { view.classList.remove('enter'); void view.offsetWidth; view.classList.add('enter'); }
 }
@@ -476,6 +540,11 @@ view.addEventListener('click', async (e) => {
     sfx.tap();
     try { await navigator.clipboard.writeText(data.ntfy.topic); b.textContent = '✅ คัดลอกแล้ว'; }
     catch (_) { const sel = getSelection(); const rg = document.createRange(); rg.selectNodeContents($('#topicBox')); sel.removeAllRanges(); sel.addRange(rg); b.textContent = 'เลือกข้อความแล้ว กดคัดลอกได้เลย'; }
+  } else if (act === 'course') {
+    sfx.tap(); state.prevView = state.view; state.course = b.dataset.code;
+    const r = b.getBoundingClientRect(); go('course', r.left + r.width / 2, r.top + r.height / 2); scrollTo(0, 0);
+  } else if (act === 'back') {
+    sfx.blip(-1); go(state.prevView || 'today', innerWidth / 2, 80);
   } else if (act === 'totasks') {
     sfx.tap(); const el = $('#tasksTop'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } else if (act === 'taskdone') {
@@ -493,6 +562,7 @@ view.addEventListener('click', async (e) => {
   }
 });
 
+view.addEventListener('input', (e) => { if (e.target.dataset.score !== undefined) updateCourseCalc(); });
 view.addEventListener('submit', (e) => {
   if (e.target.id !== 'taskForm') return;
   e.preventDefault();

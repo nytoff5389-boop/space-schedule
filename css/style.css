@@ -398,3 +398,28 @@ details.task-done .tasks { margin-top: 10px; }
 .cc-note { margin-top: 8px; font-size: 13.5px; color: var(--amber); }
 .item.cancel .date-chip { border-color: rgba(251,113,133,.6); color: var(--red); }
 .item.cancel .t { text-decoration: line-through; text-decoration-color: rgba(251,113,133,.7); }
+/* Course detail page */
+.pill.cd-open { margin-top: 10px; color: var(--cyan); border-color: rgba(103,232,249,.4); font-weight: 600; padding: 7px 12px; }
+.big-btn.cd-btn { margin: 0 0 14px; font-size: 15.5px; }
+.cd-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.cd-big { font-family: 'Orbitron', sans-serif; font-size: 26px; font-weight: 700; color: var(--cyan); white-space: nowrap; }
+.cd-sub { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+.cd-rate { margin: 8px 0; font-size: 14px; color: var(--amber); }
+.cd-scroll { overflow-x: auto; margin: 0 -6px; }
+.cd-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cd-table th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12.5px; padding: 6px; border-bottom: 1px solid var(--line-strong); white-space: nowrap; }
+.cd-table td { padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.cd-table td:nth-child(n+3), .cd-table th:nth-child(n+3) { text-align: right; white-space: nowrap; }
+.cd-table tfoot td { font-weight: 700; color: var(--cyan); border-bottom: none; }
+.cd-sum td:nth-child(2), .cd-sum th:nth-child(2) { text-align: right; }
+.cd-table input, .cd-in input { width: 74px; min-height: 40px; padding: 6px 8px; border-radius: 10px; font: inherit; font-size: 16px; text-align: right; color: var(--text); background: rgba(255,255,255,.06); border: 1px solid var(--line); color-scheme: dark; }
+.cd-in { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 14px; color: var(--muted); }
+.cd-in input { width: 110px; }
+.cd-bar { display: flex; gap: 3px; height: 30px; margin: 8px 0 10px; border-radius: 10px; overflow: hidden; }
+.cd-bar span { display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #050814; background: hsl(var(--h) 85% 68%); min-width: 26px; }
+.cd-clo { margin-bottom: 8px; line-height: 1.5; }
+.cd-clo b { color: var(--violet); margin-right: 4px; }
+.cd-grades { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+.cd-grades span { text-align: center; padding: 6px 2px; border-radius: 10px; background: rgba(255,255,255,.05); border: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.cd-grades b { display: block; font-size: 17px; color: var(--text); font-family: 'Orbitron', sans-serif; }
+.cd-calc { border-color: rgba(103,232,249,.4); }
