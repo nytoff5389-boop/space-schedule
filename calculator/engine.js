@@ -56,7 +56,7 @@ export const CONSTANTS = {
 
 // ---------- tokens ----------
 export const FUNCS = new Set(['sin(', 'cos(', 'tan(', 'sin⁻¹(', 'cos⁻¹(', 'tan⁻¹(', 'sinh(', 'cosh(', 'tanh(', 'sinh⁻¹(', 'cosh⁻¹(', 'tanh⁻¹(',
-  'ln(', 'log(', 'Abs(', 'Int(', 'Intg(', 'GCD(', 'LCM(', 'RanInt#(', 'Arg(', 'Conjg(', 'ReP(', 'ImP(', 'Neg(', 'Not(', '∫(', 'd/dx(', 'Σ(', 'Π(', 'Rnd(']);
+  'ln(', 'log(', 'Abs(', 'Int(', 'Intg(', 'GCD(', 'LCM(', 'RanInt#(', 'Arg(', 'Conjg(', 'ReP(', 'ImP(', 'Neg(', 'Not(', '∫(', 'd/dx(', 'Σ(', 'Π(', 'Rnd(', 'Pol(', 'Rec(']);
 const VARS = new Set(['A', 'B', 'C', 'D', 'E', 'F', 'x', 'y', 'z', 'M']);
 const isDigit = (t) => typeof t === 'string' && t.length === 1 && t >= '0' && t <= '9';
 const isNode = (t) => t && typeof t === 'object';
@@ -240,7 +240,18 @@ class Parser {
       else if (t === '⁻¹') { this.next(); v = div(C(1), v); }
       else if (t === '!') { this.next(); v = C(fact(real(v))); }
       else if (t === '%') { this.next(); v = C(real(v) / 100); }
-      else if (t === '°') { this.next(); v = C(fromRad(real(v) * Math.PI / 180, this.ctx.angle)); }
+      else if (t === 'ᵒ') { this.next(); v = C(fromRad(real(v) * Math.PI / 180, this.ctx.angle)); }
+      else if (t === '°') { // sexagesimal input: d°m°s°
+        this.next(); let d = real(v);
+        for (const div of [60, 3600]) {
+          const save = this.i;
+          if (!(isDigit(this.peek()) || this.peek() === '.')) break;
+          const part = real(this.number());
+          if (this.peek() !== '°') { this.i = save; break; }
+          this.next(); d += Math.sign(d || 1) * part / div;
+        }
+        v = C(d);
+      }
       else if (t === 'ʳ') { this.next(); v = C(fromRad(real(v), this.ctx.angle)); }
       else if (t === 'ᵍ') { this.next(); v = C(fromRad(real(v) * Math.PI / 200, this.ctx.angle)); }
       else return v;
@@ -369,6 +380,8 @@ class Parser {
       case 'ReP(': return C(one().re);
       case 'ImP(': return C(one().im);
       case 'Neg(': return C(I32(-(r1() | 0)));
+      case 'Pol(': { const [x, y] = two(); const r = Math.hypot(x, y), th = fromRad(Math.atan2(y, x), ang); ctx.vars.x = C(r); ctx.vars.y = C(th); return C(r); }
+      case 'Rec(': { const [r, th] = two(); const x = r * cosA(th, ang), y = r * sinA(th, ang); ctx.vars.x = C(x); ctx.vars.y = C(y); return C(x); }
       case 'Not(': return C(I32(~(r1() | 0)));
     }
     syntax();

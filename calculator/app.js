@@ -100,7 +100,7 @@ class Editor {
 const ATOM_HTML = {
   '×': '×', '÷': '÷', '−': '−', '+': '+', 'E': '<span class="e10">×10</span>', '²': '<sup>2</sup>', '³': '<sup>3</sup>', '⁻¹': '<sup>−1</sup>',
   'P': '<span class="op">P</span>', 'C': '<span class="op">C</span>', 'Ans': 'Ans', 'Ran#': 'Ran#', ',': ',', '=': ' = ', '∠': '∠',
-  'and': ' and ', 'or': ' or ', 'xor': ' xor ', 'xnor': ' xnor ', 'ʳ': '<sup>r</sup>', 'ᵍ': '<sup>g</sup>', 'i': '<i class="im">i</i>',
+  '°': '°', 'ᵒ': '<sup>o</sup>', 'and': ' and ', 'or': ' or ', 'xor': ' xor ', 'xnor': ' xnor ', 'ʳ': '<sup>r</sup>', 'ᵍ': '<sup>g</sup>', 'i': '<i class="im">i</i>',
 };
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 function atomHtml(t) {
@@ -201,27 +201,16 @@ const errHtml = (e) => {
 const ctxFor = (mode = 'real', extra = {}) => ({ mode, angle: settings.angle, vars, ...extra });
 const getVal = (k) => { const v = vars[k]; return v ? v : C(0); };
 
-const APPS = [
-  { id: 'calc', name: 'คำนวณ', icon: '<rect x="6" y="6" width="28" height="22" rx="3"/><path d="M11 13h6M14 10v6M23 13h6M11 22h6M23 20h6M23 24h6"/>' },
-  { id: 'stat', name: 'สถิติ', icon: '<path d="M6 30h28"/><rect x="9" y="18" width="5" height="12"/><rect x="17.5" y="10" width="5" height="20"/><rect x="26" y="14" width="5" height="16"/>' },
-  { id: 'dist', name: 'การแจกแจง', icon: '<path d="M5 30h30"/><path d="M6 29c6 0 7-19 14-19s8 19 14 19"/><path d="M20 10v19" stroke-dasharray="2 2"/>' },
-  { id: 'table', name: 'ตารางค่า', icon: '<rect x="6" y="7" width="28" height="24" rx="2"/><path d="M6 14h28M17 7v24M6 20.5h28M6 26h28"/>' },
-  { id: 'eqn', name: 'สมการ', icon: '<path d="M8 13h8M12 9l-0 0"/><text x="7" y="17" font-size="9" stroke="none" fill="currentColor">x²</text><text x="7" y="30" font-size="9" stroke="none" fill="currentColor">x=?</text><path d="M24 12h8M24 16h8"/>' },
-  { id: 'ineq', name: 'อสมการ', icon: '<text x="6" y="25" font-size="13" stroke="none" fill="currentColor">x&gt;0</text>' },
-  { id: 'cplx', name: 'จำนวนเชิงซ้อน', icon: '<circle cx="20" cy="19" r="11"/><text x="16.5" y="24" font-size="13" font-style="italic" stroke="none" fill="currentColor">i</text>' },
-  { id: 'base', name: 'ฐานเลข', icon: '<text x="5" y="17" font-size="9" stroke="none" fill="currentColor">0b10</text><text x="5" y="30" font-size="9" stroke="none" fill="currentColor">0xFF</text>' },
-  { id: 'ratio', name: 'อัตราส่วน', icon: '<text x="6" y="24" font-size="12" stroke="none" fill="currentColor">a:b</text>' },
-];
 
 const state = {
-  app: 'home', homeSel: 0, shift: false, menu: null, // menu: stack of {title, items, sel}
+  app: 'calc', shift: false, alpha: false, menu: null, // menu: stack of {title, items, sel}
   view: null,
 };
 
 // ---------- Calc-like apps (calc, cplx, base) ----------
 function makeCalcApp(kind) {
   return {
-    kind, ed: new Editor(), phase: 'input', result: null, error: null, fmtIdx: 0, histIdx: -1, base: 10,
+    kind, ed: new Editor(), phase: 'input', result: null, error: null, fmt: 'std', histIdx: -1, base: 10,
     title() { return { calc: 'คำนวณ', cplx: 'เชิงซ้อน', base: 'ฐานเลข' }[kind]; },
     mode() { return kind === 'cplx' ? 'complex' : kind === 'base' ? 'base' : 'real'; },
     formats() {
@@ -229,12 +218,12 @@ function makeCalcApp(kind) {
       if (kind === 'cplx') return [['std', 'มาตรฐาน (a+bi)'], ['dec', 'ทศนิยม'], ['polar', 'เชิงขั้ว r∠θ']];
       return [['std', 'มาตรฐาน'], ['dec', 'ทศนิยม'], ['improper', 'เศษเกิน'], ['mixed', 'จำนวนคละ'], ['eng', 'วิศวกรรม ×10³ⁿ'], ['dms', 'องศา ลิปดา ฟิลิปดา']];
     },
-    exec(forceDec = false) {
+    exec(forceDec = false, solve = false) {
       const items = clone(this.ed.root);
       if (!items.length) return;
       try {
         const ctx = ctxFor(this.mode(), { base: this.base });
-        if (items.includes('=')) {
+        if (items.includes('=') || solve) {
           const g = vars.x ? vars.x.re : 0;
           const r = E.solveFor(items, ctx, g);
           vars.x = C(E.round12(r.x));
@@ -242,10 +231,13 @@ function makeCalcApp(kind) {
         } else {
           const v = E.evalList(items, ctx);
           vars.PreAns = vars.Ans; vars.Ans = v;
+          if (items[0] === 'Pol(' || items[0] === 'Rec(') { this.result = { pr: items[0], a: vars.x, b: vars.y, v }; }
+          else {
           const piish = E.containsAny(items, (t) => t === 'π' || /⁻¹\(/.test(t)) && settings.angle === 'rad';
           this.result = { v, pi: piish || E.containsAny(items, (t) => t === 'π') };
+          }
         }
-        this.fmtIdx = forceDec ? 1 : 0;
+        this.fmt = forceDec ? 'dec' : 'std';
         this.phase = 'result'; this.error = null; this.histIdx = -1;
         history.push({ items, mode: this.mode(), html: this.resultHtml() });
         if (history.length > 40) history = history.slice(-40);
@@ -262,16 +254,19 @@ function makeCalcApp(kind) {
         const others = [10, 16, 2, 8].filter((b) => b !== this.base).map((b) => `<div><b>${name[b]}</b> ${show(b)}</div>`).join('');
         return `${show(this.base)}<div class="others">${others}</div>`;
       }
-      const f = (this.formats()[this.fmtIdx] || ['std'])[0];
-      return valueHtml(r.v, f, { pi: r.pi });
+      if (r.pr) {
+        const [la, lb] = r.pr === 'Pol(' ? ['r', 'θ'] : ['<i>x</i>', '<i>y</i>'];
+        return `<div class="solve"><div>${la} = ${realHtml(r.a.re, 'dec')}</div><div>${lb} = ${realHtml(r.b.re, 'dec')}</div></div>`;
+      }
+      return valueHtml(r.v, this.fmt, { pi: r.pi });
     },
     render() {
       const showCur = this.phase === 'input';
       let h = `<div class="expr" id="expr">${this.ed.html(showCur) || (showCur ? CUR : '')}</div>`;
       if (this.phase === 'result') h += `<div class="res">${this.resultHtml()}</div>`;
       if (this.phase === 'error') h = errHtml(this.error);
-      if (kind === 'base') h += `<div class="hint">โหมด <b>${{ 10: 'DEC', 16: 'HEX', 2: 'BIN', 8: 'OCT' }[this.base]}</b> · ปุ่มแถวบน = A–F · x⁻¹ DEC · sin HEX · cos BIN · tan OCT</div>`;
-      if (kind === 'cplx') h += `<div class="hint">ปุ่ม <i>x</i> = <i>i</i> · FORMAT สลับ a+bi / r∠θ</div>`;
+      if (kind === 'base') h += `<div class="hint">โหมด <b>${{ 10: 'DEC', 16: 'HEX', 2: 'BIN', 8: 'OCT' }[this.base]}</b> · ปุ่ม (−) °′″ hyp sin cos tan = A–F · x² DEC · x<sup>■</sup> HEX · log BIN · ln OCT</div>`;
+      if (kind === 'cplx') h += `<div class="hint">ENG = <i>i</i> · SHIFT 2 = เมนูเชิงซ้อน (r∠θ, Arg, Conjg)</div>`;
       return h;
     },
     startNew() { if (this.phase !== 'input') { this.ed.clear(); this.phase = 'input'; this.error = null; } },
@@ -282,12 +277,19 @@ function makeCalcApp(kind) {
         if (k === 'back') { this.phase = 'input'; return; }
         return;
       }
-      if (k === 'exe' || k === 'ok') return this.exec();
+      if (k === 'exe') return this.exec();
       if (k === 'approx') return this.exec(true);
-      if (k === 'format') {
-        if (this.phase !== 'result' || !this.formats().length) return;
-        const items = this.formats().map(([id, label], i) => ({ label, check: i === this.fmtIdx, act: () => { this.fmtIdx = i; } }));
-        return openMenu('FORMAT รูปแบบคำตอบ', items);
+      if (k === 'solve') return this.exec(false, true);
+      const res = this.phase === 'result' && this.result && this.result.v && kind !== 'base';
+      if (k === 'sd') { if (res) this.fmt = this.fmt === 'std' ? 'dec' : 'std'; return; }
+      if (k === 'mixtoggle') { if (res) this.fmt = this.fmt === 'mixed' ? 'improper' : 'mixed'; return; }
+      if (k === 'polar' || k === 'rect') { if (res) this.fmt = k === 'polar' ? 'polar' : 'std'; return; }
+      if (k === 'eng') { if (kind === 'cplx') k = 'i'; else { if (res) this.fmt = this.fmt === 'eng' ? 'std' : 'eng'; return; } }
+      if (k === 'dms' && res) { this.fmt = this.fmt === 'dms' ? 'std' : 'dms'; return; }
+      if (k === 'mplus' || k === 'mminus') {
+        if (this.phase === 'input') { this.exec(); if (this.phase !== 'result') return; }
+        const a = vars.Ans || C(0), m = vars.M || C(0), sg = k === 'mplus' ? 1 : -1;
+        vars.M = C(m.re + sg * a.re, m.im + sg * a.im); saveAll(); return;
       }
       if (k === 'ac') { this.ed.clear(); this.phase = 'input'; this.result = null; return; }
       if (k === 'left' || k === 'right') {
@@ -306,19 +308,18 @@ function makeCalcApp(kind) {
       if (k === 'del') { if (this.phase !== 'input') { this.phase = 'input'; return; } return this.ed.del(); }
       // base-n remaps
       if (kind === 'base') {
-        const hex = { x: 'A', frac: 'B', sqrt: 'C', sq: 'D', pow: 'E', logb: 'F' };
-        const bases = { inv: 10, sin: 16, cos: 2, tan: 8 };
+        const hex = { neg: 'A', dms: 'B', hyp: 'C', sin: 'D', cos: 'E', tan: 'F', 'var:A': 'A', 'var:B': 'B', 'var:C': 'C', 'var:D': 'D', 'var:E': 'E', 'var:F': 'F' };
+        const bases = { sq: 10, pow: 16, log: 2, ln: 8 };
         if (bases[k]) { this.base = bases[k]; return; }
         if (hex[k]) { this.startNew(); return this.ed.insert(hex[k]); }
         if (!['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'add', 'sub', 'mul', 'div', 'lp', 'rp', 'ans', 'insert'].includes(k)) return;
       }
-      if (kind === 'cplx' && k === 'x') k = 'i';
       return insertKey(this, k, payload);
     },
   };
 }
 // Calc apps share insertion semantics
-const OPS_START_ANS = new Set(['add', 'sub', 'mul', 'div', 'sq', 'cube', 'inv', 'fact', 'pow', 'pct', 'npr', 'ncr']);
+const OPS_START_ANS = new Set(['add', 'sub', 'mul', 'div', 'sq', 'cube', 'inv', 'fact', 'pow', 'pct', 'npr', 'ncr', 'dms']);
 function insertKey(app, k, payload) {
   if (app.phase === 'histview') app.phase = 'input';
   if (app.phase === 'result') {
@@ -330,12 +331,15 @@ function insertKey(app, k, payload) {
 const SIMPLE = {
   add: '+', sub: '−', mul: '×', div: '÷', dot: '.', exp: 'E', lp: '(', rp: ')', comma: ',', ans: 'Ans', x: 'x', pi: 'π', e: 'e', i: 'i',
   sin: 'sin(', cos: 'cos(', tan: 'tan(', asin: 'sin⁻¹(', acos: 'cos⁻¹(', atan: 'tan⁻¹(', ln: 'ln(', sq: '²', cube: '³', inv: '⁻¹', fact: '!',
-  npr: 'P', ncr: 'C', pct: '%', ran: 'Ran#', eq: '=',
+  npr: 'P', ncr: 'C', pct: '%', ran: 'Ran#', eq: '=', log: 'log(', neg: '−', dms: '°', angle: '∠', integ: '∫(', deriv: 'd/dx(', sigma: 'Σ(',
+  pol: 'Pol(', rec: 'Rec(', rnd: 'Rnd(', ranint: 'RanInt#(',
 };
 function insertInto(ed, k, payload) {
   if (/^[0-9]$/.test(k)) return ed.insert(k);
   if (k === 'insert') { if (Array.isArray(payload)) payload.forEach((t) => ed.insert(t)); else if (typeof payload === 'string') ed.insert(payload); else if (payload && payload.node) { ed.insertNode(payload.node); } return; }
   if (SIMPLE[k]) return ed.insert(SIMPLE[k]);
+  if (k.startsWith('var:')) return ed.insert(k.slice(4));
+  if (k === 'cbrt') { ed.insertNode('root'); ed.insert('3'); return ed.right(); }
   switch (k) {
     case 'frac': return ed.insertNode('frac');
     case 'mixed': return ed.insertNode('mixed');
@@ -373,7 +377,7 @@ function makeForm({ title, header, fields, grid, compute, allowX = false }) {
         const vis = rows.slice(this.scroll, this.scroll + 6);
         return `<div class="results">${vis.map((r) => r.html !== undefined ? `<div class="rrow wide">${r.html}</div>` : `<div class="rrow"><span class="rl">${r.label}</span><span class="rv">${r.value}</span></div>`).join('')}</div>`
           + (rows.length > 6 ? `<div class="scrollhint">${this.scroll > 0 ? '▲' : ''} ${this.scroll + 6 < rows.length ? '▼' : ''}</div>` : '')
-          + `<div class="hint">[AC]/[BACK] กลับไปแก้ค่า</div>`;
+          + `<div class="hint">[AC] กลับไปแก้ค่า</div>`;
       }
       const cell = (f, i) => {
         const on = i === this.sel;
@@ -384,7 +388,7 @@ function makeForm({ title, header, fields, grid, compute, allowX = false }) {
       if (grid) {
         h += `<div class="fgrid" style="grid-template-columns:repeat(${grid.cols},1fr)">${grid.heads.map((x) => `<div class="gh">${x}</div>`).join('')}${this.fields.map(cell).join('')}</div>`;
       } else h += `<div class="flist">${this.fields.map(cell).join('')}</div>`;
-      h += `<div class="hint">[EXE] ใส่ค่าถัดไป · [OK] คำนวณ</div>`;
+      h += `<div class="hint">[=] ใส่ค่าถัดไป · ช่องสุดท้ายกด [=] เพื่อคำนวณ</div>`;
       return h;
     },
     key(k, payload) {
@@ -419,7 +423,8 @@ function makeForm({ title, header, fields, grid, compute, allowX = false }) {
       }
       if (k === 'ac') { f.ed.clear(); return; }
       if (k === 'del') return f.ed.del();
-      if (k === 'x' && !allowX && !f.raw) return;
+      if (k === 'var:x' && !allowX && !f.raw) return;
+      if (!['0','1','2','3','4','5','6','7','8','9'].includes(k) && !(k in SIMPLE) && !/^(var:|frac|mixed|sqrt|root|pow|tenx|ex|logb|abs|cbrt|insert)/.test(k)) return;
       insertInto(f.ed, k, payload);
     },
     select(i) { this.sel = i; },
@@ -512,7 +517,7 @@ function ratioForm(type) {
 }
 function tableForm() {
   const form = makeForm({
-    title: 'ตารางค่า', header: 'ตั้งค่าตาราง (ใช้ปุ่ม <i>x</i>)', allowX: true,
+    title: 'ตารางค่า', header: 'ตั้งค่าตาราง (<i>x</i> = ALPHA + ปุ่ม ) )', allowX: true,
     fields: [{ label: '<i>f</i>(<i>x</i>)=', raw: true }, { label: 'เริ่ม', init: 1 }, { label: 'สิ้นสุด', init: 5 }, { label: 'ขั้น', init: 1 }],
     compute([f, a, b, s]) {
       if (!f.length || !(s > 0) || b < a || (b - a) / s > 45) throw new CalcError('math');
@@ -574,7 +579,7 @@ function makeStat(twoVar) {
         }).join('')}</tr>`;
       }
       h += '</table>';
-      h += `<div class="sinput">${this.ed.isEmpty() ? CUR : this.ed.html(true)}</div><div class="hint">[EXE] บันทึก · [OK] คำนวณผล · [TOOLS] จัดการข้อมูล</div>`;
+      h += `<div class="sinput">${this.ed.isEmpty() ? CUR : this.ed.html(true)}</div><div class="hint">[=] บันทึก · SHIFT 1 (STAT) = ผลลัพธ์/จัดการข้อมูล</div>`;
       return h;
     },
     key(k, payload) {
@@ -582,7 +587,7 @@ function makeStat(twoVar) {
       if (this.phase === 'result') {
         if (k === 'up') this.scroll = Math.max(0, this.scroll - 1);
         else if (k === 'down') this.scroll = Math.min(Math.max(0, this.results.length - 5), this.scroll + 1);
-        else if (['ac', 'back', 'exe', 'ok'].includes(k)) this.phase = 'input';
+        else if (['ac', 'exe'].includes(k)) this.phase = 'input';
         return;
       }
       const nc = this.cols().length;
@@ -611,7 +616,7 @@ const resultsHtml = (app) => {
   const rows = app.results, vis = rows.slice(app.scroll, app.scroll + 5);
   return `<div class="results">${vis.map((r) => r.html !== undefined ? `<div class="rrow wide">${r.html}</div>` : `<div class="rrow"><span class="rl">${r.label}</span><span class="rv">${r.value}</span></div>`).join('')}</div>`
     + (rows.length > 5 ? `<div class="scrollhint">${app.scroll > 0 ? '▲' : ''} ${app.scroll + 5 < rows.length ? '▼' : ''}</div>` : '')
-    + `<div class="hint">[AC]/[BACK] กลับไปแก้ข้อมูล</div>`;
+    + `<div class="hint">[AC] กลับไปแก้ข้อมูล</div>`;
 };
 
 // ======================= menus =======================
@@ -624,8 +629,8 @@ function menuKey(k) {
   const m = state.menu[state.menu.length - 1];
   if (k === 'up') m.sel = (m.sel - 1 + m.items.length) % m.items.length;
   else if (k === 'down') m.sel = (m.sel + 1) % m.items.length;
-  else if (k === 'ok' || k === 'exe' || k === 'right') chooseMenu(m.sel);
-  else if (k === 'back' || k === 'left') closeMenu();
+  else if (k === 'exe' || k === 'right') chooseMenu(m.sel);
+  else if (k === 'left' || k === 'del') closeMenu();
   else if (k === 'ac') closeMenu(true);
   else if (/^[1-9]$/.test(k) && Number(k) <= m.items.length) chooseMenu(Number(k) - 1);
 }
@@ -665,7 +670,7 @@ function functionMenu() {
     { label: 'ความน่าจะเป็น', sub: () => [ins('!', 'x! แฟกทอเรียล'), ins('P', 'nPr การเรียงสับเปลี่ยน'), ins('C', 'nCr การจัดหมู่'), ins('%', '% เปอร์เซ็นต์'), ins('Ran#', 'Ran# สุ่ม 0–1'), ins('RanInt#(', 'RanInt#(a,b) สุ่มจำนวนเต็ม')] },
     { label: 'ตัวเลข', sub: () => [ins([K('abs')], '|x| ค่าสัมบูรณ์'), ins('Int(', 'Int( ส่วนจำนวนเต็ม'), ins('Intg(', 'Intg( ปัดลง'), ins('Rnd(', 'Rnd( ปัดตามหลักแสดงผล'), ins('GCD(', 'GCD(a,b) ห.ร.ม.'), ins('LCM(', 'LCM(a,b) ค.ร.น.')] },
     { label: 'แคลคูลัส', sub: () => [ins('∫(', '∫( ปริพันธ์', '∫(f(x),a,b)'), ins('d/dx(', 'd/dx( อนุพันธ์', 'd/dx(f(x),a)'), ins('Σ(', 'Σ( ผลบวก', 'Σ(f(x),a,b)'), ins('Π(', 'Π( ผลคูณ', 'Π(f(x),a,b)')] },
-    { label: 'มุม', sub: () => [ins('°', '° องศา'), ins('ʳ', 'ʳ เรเดียน'), ins('ᵍ', 'ᵍ เกรเดียน')] },
+    { label: 'มุม', sub: () => [ins('ᵒ', '° องศา'), ins('ʳ', 'ʳ เรเดียน'), ins('ᵍ', 'ᵍ เกรเดียน')] },
     { label: 'แก้สมการ (SOLVE)', sub: () => [ins('=', 'ใส่เครื่องหมาย =', 'แล้วกด EXE'), ins('x', 'ตัวแปร x')] },
     { label: 'ค่าคงที่ทางวิทยาศาสตร์', sub: constMenu },
   ];
@@ -674,22 +679,6 @@ function functionMenu() {
   return cat;
 }
 const constMenu = () => Object.entries(E.CONSTANTS).map(([k, c]) => ins('§' + k, `${c.label} <small>${c.name}</small>`));
-function catalogMenu() {
-  const all = [];
-  for (const c of functionMenu()) if (c.sub) all.push(...c.sub());
-  return all;
-}
-function variableMenu() {
-  const names = ['A', 'B', 'C', 'D', 'E', 'F', 'x', 'y', 'z', 'M'];
-  const show = (k) => vars[k] ? valueHtml(vars[k], 'dec') : '0';
-  return [
-    ...names.map((k) => ({ label: `<i>${k}</i> = ${show(k)}`, act: () => appInsert(k) })),
-    { label: 'เก็บ Ans ลงตัวแปร…', sub: () => names.map((k) => ({ label: `→ <i>${k}</i>`, act: () => { vars[k] = vars.Ans || C(0); saveAll(); } })) },
-    { label: 'M+ (บวก Ans เข้า M)', act: () => { const a = vars.Ans || C(0), m = vars.M || C(0); vars.M = C(m.re + a.re, m.im + a.im); saveAll(); } },
-    { label: 'M− (ลบ Ans ออกจาก M)', act: () => { const a = vars.Ans || C(0), m = vars.M || C(0); vars.M = C(m.re - a.re, m.im - a.im); saveAll(); } },
-    { label: 'ล้างตัวแปรทั้งหมด', act: () => { names.forEach((k) => delete vars[k]); saveAll(); } },
-  ];
-}
 function settingsMenu() {
   const set = (fn) => () => { fn(); saveAll(); };
   return [
@@ -700,77 +689,83 @@ function settingsMenu() {
       { label: 'ทศนิยมคงที่ (Fix)', check: settings.fmt.mode === 'fix', sub: () => Array.from({ length: 10 }, (_, n) => ({ label: `Fix ${n} ตำแหน่ง`, check: settings.fmt.mode === 'fix' && settings.fmt.n === n, act: set(() => { settings.fmt = { mode: 'fix', n }; }) })) },
       { label: 'วิทยาศาสตร์ (Sci)', check: settings.fmt.mode === 'sci', sub: () => Array.from({ length: 10 }, (_, n) => ({ label: `Sci ${n + 1} หลัก`, check: settings.fmt.mode === 'sci' && settings.fmt.n === n + 1, act: set(() => { settings.fmt = { mode: 'sci', n: n + 1 }; }) })) },
     ] },
-    { label: 'รีเซ็ตเครื่องคิดเลข', sub: () => [{ label: 'ยืนยัน: ล้างการตั้งค่า ตัวแปร และประวัติ', act: () => { Object.assign(settings, { angle: 'deg', fmt: { mode: 'norm' }, output: 'math', freq: false }); Object.keys(vars).forEach((k) => delete vars[k]); history = []; saveAll(); renderSide(); goHome(); } }, { label: 'ยกเลิก', act: () => {} }] },
+    { label: 'รีเซ็ตเครื่องคิดเลข', sub: () => [{ label: 'ยืนยัน: ล้างการตั้งค่า ตัวแปร และประวัติ', act: () => { Object.assign(settings, { angle: 'deg', fmt: { mode: 'norm' }, output: 'math', freq: false }); Object.keys(vars).forEach((k) => delete vars[k]); history = []; saveAll(); renderSide(); launch('calc'); } }, { label: 'ยกเลิก', act: () => {} }] },
     { label: 'เกี่ยวกับ', sub: () => [{ label: 'อัศวิน KN-991 ชมพู · เครื่องคิดเลขวิทยาศาสตร์', act: () => {} }, { label: 'ทำงานออฟไลน์ได้ · เก็บข้อมูลไว้ในเครื่องนี้', act: () => {} }] },
   ];
 }
-function toolsMenu() {
-  const items = [];
-  if (state.view && state.view.tools) items.push(...state.view.tools());
-  if (state.view && state.view.ed && state.view.kind) {
-    items.push({ label: 'ประวัติการคำนวณ', sub: () => {
-      const hs = history.filter((h) => h.mode === state.view.mode()).slice().reverse();
-      if (!hs.length) return [{ label: 'ยังไม่มีประวัติ', act: () => {} }];
-      return hs.map((h) => ({ label: `<span class="hexpr">${renderList(h.items, null)}</span> <span class="hres">= ${h.html}</span>`, act: () => { state.view.ed.set(h.items); state.view.phase = 'input'; } }));
-    } });
-  }
-  items.push({ label: 'ล้างประวัติ', act: () => { history = []; saveAll(); renderSide(); } });
-  return items;
-}
 
 // ======================= app switching =======================
-function goHome() { state.app = 'home'; state.view = null; state.menu = null; }
 const calcCache = {};
+const MODES = [
+  ['calc', 'COMP', 'คำนวณทั่วไป'], ['cplx', 'CMPLX', 'จำนวนเชิงซ้อน'], ['stat', 'STAT', 'สถิติ'], ['base', 'BASE-N', 'ฐานเลข'], ['eqn', 'EQN', 'สมการ'],
+  ['table', 'TABLE', 'ตารางค่า f(x)'], ['ineq', 'INEQ', 'อสมการ'], ['dist', 'DIST', 'การแจกแจง'], ['ratio', 'RATIO', 'อัตราส่วน'],
+];
+const modeTag = () => (MODES.find((m) => m[0] === state.app) || [])[1] || '';
 function launch(id) {
   state.menu = null;
   state.app = id;
   if (id === 'calc' || id === 'cplx' || id === 'base') { state.view = calcCache[id] = calcCache[id] || makeCalcApp(id); return; }
   state.view = null;
-  if (id === 'stat') openMenu('สถิติ: เลือกชนิด', [{ label: '1 ตัวแปร', act: () => { state.view = makeStat(false); } }, { label: '2 ตัวแปร (y = a + bx)', act: () => { state.view = makeStat(true); } }], { root: true });
-  if (id === 'eqn') openMenu('สมการ: เลือกชนิด', [
-    { label: 'ระบบสมการเชิงเส้น', sub: () => [2, 3, 4].map((n) => ({ label: `${n} ตัวแปร`, act: () => { state.view = equationForm('simul', n); } })) },
-    { label: 'สมการพหุนาม', sub: () => [2, 3, 4].map((n) => ({ label: `ดีกรี ${n}  (${['ax²+bx+c', 'ax³+bx²+cx+d', 'ax⁴+bx³+cx²+dx+e'][n - 2]})`, act: () => { state.view = equationForm('poly', n); } })) },
+  if (id === 'stat') openMenu('STAT: เลือกชนิด', [{ label: '1-VAR (1 ตัวแปร)', act: () => { state.view = makeStat(false); } }, { label: 'A+BX (y = a + bx)', act: () => { state.view = makeStat(true); } }], { root: true });
+  if (id === 'eqn') openMenu('EQN: เลือกชนิด', [
+    ...[2, 3, 4].map((n) => ({ label: `ระบบสมการ ${n} ตัวแปร`, act: () => { state.view = equationForm('simul', n); } })),
+    ...[2, 3, 4].map((n) => ({ label: `${['ax²+bx+c', 'ax³+bx²+cx+d', 'ax⁴+…+e'][n - 2]} = 0`, act: () => { state.view = equationForm('poly', n); } })),
   ], { root: true });
-  if (id === 'ineq') openMenu('อสมการ: เลือกดีกรี', [2, 3, 4].map((n) => ({ label: `ดีกรี ${n}`, sub: () => ['>', '<', '≥', '≤'].map((op) => ({ label: `… ${op} 0`, act: () => { state.view = inequalityForm(n, op); } })) })), { root: true });
-  if (id === 'dist') openMenu('การแจกแจง: เลือกชนิด', DISTS.map((d) => ({ label: d.name, act: () => { state.view = distForm(d); } })), { root: true });
-  if (id === 'ratio') openMenu('อัตราส่วน: เลือกแบบ', [{ label: 'A : B = X : D', act: () => { state.view = ratioForm(1); } }, { label: 'A : B = C : X', act: () => { state.view = ratioForm(2); } }], { root: true });
+  if (id === 'ineq') openMenu('INEQ: เลือกดีกรี', [2, 3, 4].map((n) => ({ label: `ดีกรี ${n}`, sub: () => ['>', '<', '≥', '≤'].map((op) => ({ label: `… ${op} 0`, act: () => { state.view = inequalityForm(n, op); } })) })), { root: true });
+  if (id === 'dist') openMenu('DIST: เลือกชนิด', DISTS.map((d) => ({ label: d.name, act: () => { state.view = distForm(d); } })), { root: true });
+  if (id === 'ratio') openMenu('RATIO: เลือกแบบ', [{ label: 'A : B = X : D', act: () => { state.view = ratioForm(1); } }, { label: 'A : B = C : X', act: () => { state.view = ratioForm(2); } }], { root: true });
   if (id === 'table') state.view = tableForm();
+}
+const modeMenu = () => MODES.map(([id, tag, name]) => ({ label: `<b>${tag}</b> <small>${name}</small>`, act: () => launch(id) }));
+const hypMenu = () => ['sinh(', 'cosh(', 'tanh(', 'sinh⁻¹(', 'cosh⁻¹(', 'tanh⁻¹('].map((t) => ins(t, t));
+const drgMenu = () => [ins('ᵒ', '° องศา'), ins('ʳ', 'ʳ เรเดียน'), ins('ᵍ', 'ᵍ เกรเดียน')];
+const VARNAMES = ['A', 'B', 'C', 'D', 'E', 'F', 'x', 'y', 'M'];
+const rclMenu = () => VARNAMES.map((k) => ({ label: `<i>${k}</i> = ${vars[k] ? valueHtml(vars[k], 'dec') : '0'}`, act: () => appInsert(k) }));
+const stoMenu = () => VARNAMES.map((k) => ({ label: `Ans → <i>${k}</i>`, act: () => { vars[k] = vars.Ans || C(0); saveAll(); } }));
+function clrMenu() {
+  return [
+    { label: 'Setup ตั้งค่ากลับเป็นค่าเริ่มต้น', act: () => { Object.assign(settings, { angle: 'deg', fmt: { mode: 'norm' }, output: 'math', freq: false }); saveAll(); } },
+    { label: 'Memory ล้างตัวแปรและ M', act: () => { VARNAMES.forEach((k) => delete vars[k]); delete vars.Ans; saveAll(); } },
+    { label: 'History ล้างประวัติ', act: () => { history = []; saveAll(); renderSide(); } },
+    { label: 'All ล้างทั้งหมด', act: () => { Object.assign(settings, { angle: 'deg', fmt: { mode: 'norm' }, output: 'math', freq: false }); Object.keys(vars).forEach((k) => delete vars[k]); history = []; saveAll(); renderSide(); Object.keys(calcCache).forEach((k) => delete calcCache[k]); launch('calc'); } },
+  ];
+}
+function cmplxMenu() {
+  return [ins('Arg(', 'arg อาร์กิวเมนต์'), ins('Conjg(', 'Conjg สังยุค'), ins('ReP(', 'ReP ส่วนจริง'), ins('ImP(', 'ImP ส่วนจินตภาพ'), ins('∠', '∠ ใส่รูปเชิงขั้ว'),
+    { label: '▶r∠θ แสดงคำตอบเชิงขั้ว', act: () => state.view.key('polar') }, { label: '▶a+bi แสดงคำตอบ a+bi', act: () => state.view.key('rect') }];
+}
+const baseMenu = () => ['and', 'or', 'xor', 'xnor', 'Not(', 'Neg('].map((t) => ins(t, t));
+function statMenu() {
+  const v = state.view;
+  return [{ label: 'ผลลัพธ์ทางสถิติ', act: () => v.compute() }, ...v.tools()];
 }
 
 // ======================= key dispatch =======================
 const SHIFTED = {
-  x: 'pi', frac: 'mixed', sqrt: 'root', sq: 'cube', pow: 'tenx', logb: 'ln', inv: 'fact', sin: 'asin', cos: 'acos', tan: 'atan', lp: 'ex', rp: 'comma',
-  mul: 'npr', div: 'ncr', add: 'pct', sub: 'eq', '0': 'ran', dot: 'e', exp: 'ans', exe: 'approx',
+  mode: 'setup', abs: 'integ', cube: 'cbrt', inv: 'fact', logb: 'sigma', frac: 'mixed', sqrt: 'deriv', sq: 'solve', pow: 'root', log: 'tenx', ln: 'ex',
+  neg: 'angle', sin: 'asin', cos: 'acos', tan: 'atan', rcl: 'sto', lp: 'pct', rp: 'comma', sd: 'mixtoggle', mplus: 'mminus',
+  '7': 'const', '8': 'funcmenu', '9': 'clr', mul: 'npr', div: 'ncr', '1': 'statmenu', '2': 'cmplxmenu', '3': 'basemenu', add: 'pol', sub: 'rec',
+  '0': 'rnd', dot: 'ran', exp: 'pi', ans: 'drg', exe: 'approx',
 };
+const ALPHAED = { neg: 'var:A', dms: 'var:B', hyp: 'var:C', sin: 'var:D', cos: 'var:E', tan: 'var:F', rp: 'var:x', sd: 'var:y', mplus: 'var:M', sq: 'eq', dot: 'ranint', exp: 'e' };
 function press(k) {
-  if (state.shift && k !== 'shift') { state.shift = false; if (SHIFTED[k]) k = SHIFTED[k]; }
-  if (k === 'shift') { state.shift = !state.shift; return render(); }
-  if (k === 'home') { goHome(); return render(); }
-  if (k === 'settings') { state.menu = null; openMenu('ตั้งค่า', settingsMenu()); return render(); }
-  if (state.menu) {
-    if (k === 'back' && state.menu.length === 1 && state.menu[0].root) { goHome(); return render(); }
-    if (['variable', 'function', 'catalog', 'tools'].includes(k)) state.menu = null; else { menuKey(k); return render(); }
-  }
-  if (state.app === 'home') {
-    const n = APPS.length;
-    if (k === 'left') state.homeSel = (state.homeSel + n - 1) % n;
-    else if (k === 'right') state.homeSel = (state.homeSel + 1) % n;
-    else if (k === 'up') state.homeSel = (state.homeSel + n - 3) % n;
-    else if (k === 'down') state.homeSel = (state.homeSel + 3) % n;
-    else if (k === 'ok' || k === 'exe') launch(APPS[state.homeSel].id);
-    else if (/^[1-9]$/.test(k)) { state.homeSel = Number(k) - 1; launch(APPS[state.homeSel].id); }
-    return render();
-  }
+  if (k === 'shift') { state.shift = !state.shift; state.alpha = false; return render(); }
+  if (k === 'alpha') { state.alpha = !state.alpha; state.shift = false; return render(); }
+  if (state.shift) { state.shift = false; if (SHIFTED[k]) k = SHIFTED[k]; }
+  else if (state.alpha) { state.alpha = false; if (ALPHAED[k]) k = ALPHAED[k]; }
+  if (k === 'on') { state.menu = null; if (!state.view) launch('calc'); else if (state.view.key) { state.view.key('ac'); state.view.key('ac'); } return render(); }
+  if (k === 'mode') { state.menu = null; openMenu('MODE เลือกโหมด', modeMenu()); return render(); }
+  if (k === 'setup') { state.menu = null; openMenu('SETUP ตั้งค่า', settingsMenu()); return render(); }
+  if (k === 'clr') { state.menu = null; openMenu('CLR ล้างข้อมูล', clrMenu()); return render(); }
+  if (state.menu) { menuKey(k); if (!state.menu && !state.view) launch('calc'); return render(); }
   const v = state.view;
-  if (k === 'variable') { if (v && v.key) openMenu('ตัวแปร (VARIABLE)', variableMenu()); return render(); }
-  if (k === 'function') { if (v && v.key) openMenu('ฟังก์ชัน (FUNCTION)', functionMenu()); return render(); }
-  if (k === 'catalog') { if (v && v.key) openMenu('แคตตาล็อก (CATALOG)', catalogMenu()); return render(); }
-  if (k === 'tools') { openMenu('เครื่องมือ (TOOLS)', toolsMenu()); return render(); }
-  if (!v) { if (k === 'back') goHome(); return render(); }
-  if (k === 'back' && (!v.phase || v.phase === 'input' || v.phase === 'result' && v.kind)) {
-    if (v.kind || state.app === 'table') { goHome(); return render(); }
-    launch(state.app); return render();
-  }
+  if (!v) { launch('calc'); return render(); }
+  const menus = { hyp: ['hyp', hypMenu], drg: ['DRG▶ แปลงหน่วยมุม', drgMenu], rcl: ['RCL เรียกค่าตัวแปร', rclMenu], sto: ['STO เก็บ Ans ลงตัวแปร', stoMenu], const: ['CONST ค่าคงที่วิทยาศาสตร์', constMenu], funcmenu: ['ฟังก์ชันเพิ่มเติม', functionMenu] };
+  if (state.app === 'base' && k === 'hyp') { v.key(k); return render(); }
+  if (menus[k]) { openMenu(menus[k][0], menus[k][1]()); return render(); }
+  if (k === 'cmplxmenu') { if (state.app === 'cplx') openMenu('CMPLX', cmplxMenu()); return render(); }
+  if (k === 'basemenu') { if (state.app === 'base') openMenu('BASE ตรรกะ', baseMenu()); return render(); }
+  if (k === 'statmenu') { if (state.app === 'stat' && v.tools) openMenu('STAT', statMenu()); return render(); }
   v.key(k);
   render();
 }
@@ -781,23 +776,22 @@ const screen = $('#lcd');
 function statusHtml() {
   const ang = { deg: 'D', rad: 'R', gra: 'G' }[settings.angle];
   const m = vars.M && (vars.M.re || vars.M.im);
-  const title = state.app === 'home' ? 'หน้าหลัก' : state.view ? state.view.title() : APPS.find((a) => a.id === state.app).name;
-  return `<div class="status"><span class="ind${state.shift ? ' on' : ''}">S</span><span class="ind on">${ang}</span>${m ? '<span class="ind on">M</span>' : ''}<span class="stitle">${title}</span><span class="heart">♡</span></div>`;
-}
-function homeHtml() {
-  const start = Math.max(0, Math.min(Math.floor(state.homeSel / 3) * 3 - 3, Math.ceil(APPS.length / 3) * 3 - 6));
-  return `<div class="home">${APPS.map((a, i) => `<div class="app${i === state.homeSel ? ' on' : ''}" data-app="${i}"${i < start || i >= start + 6 ? ' hidden' : ''}><svg viewBox="0 0 40 36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${a.icon}</svg><span>${a.name}</span></div>`).join('')}</div>`;
+  const fx = settings.fmt.mode === 'fix' ? 'FIX' : settings.fmt.mode === 'sci' ? 'SCI' : '';
+  const v = state.view;
+  const up = v && v.kind && history.some((h) => h.mode === v.mode());
+  const ind = (on, t, cls = '') => `<span class="ind${on ? ' on' : ''} ${cls}">${t}</span>`;
+  return `<div class="status">${ind(state.shift, 'S', 'sh')}${ind(state.alpha, 'A', 'al')}${ind(m, 'M')}${modeTag() !== 'COMP' ? ind(true, modeTag()) : ''}${ind(true, ang)}${fx ? ind(true, fx) : ''}<span class="stitle"></span>${ind(settings.output === 'math', 'Math')}<span class="arrow">${up ? '▲' : ''}</span></div>`;
 }
 function render() {
   let body;
   if (state.menu) body = menuHtml();
-  else if (state.app === 'home') body = homeHtml();
   else if (!state.view) body = '';
   else if (state.view.phase === 'result' && !state.view.kind) body = resultsHtml(state.view);
   else if (state.view.phase === 'histview') body = `<div class="expr">${state.view.ed.html(false)}</div><div class="res">${state.view.histHtml}</div><div class="hint">▲▼ ประวัติ · ◀▶ แก้ไข</div>`;
   else body = state.view.render();
   screen.innerHTML = statusHtml() + `<div class="lcd-body">${body}</div>`;
   document.body.classList.toggle('shifted', state.shift);
+  document.body.classList.toggle('alphaed', state.alpha);
   const cur = screen.querySelector('.cursor');
   const ex = screen.querySelector('#expr');
   if (cur && ex) {
@@ -827,7 +821,6 @@ document.querySelectorAll('[data-k]').forEach((b) => {
 });
 // tapping the screen
 screen.addEventListener('click', (e) => {
-  const a = e.target.closest('[data-app]'); if (a) { state.homeSel = Number(a.dataset.app); launch(APPS[state.homeSel].id); return render(); }
   const mi = e.target.closest('[data-mi]'); if (mi) { chooseMenu(Number(mi.dataset.mi)); return render(); }
   const f = e.target.closest('[data-field]'); if (f && state.view && state.view.select) { state.view.select(Number(f.dataset.field)); return render(); }
   const c = e.target.closest('[data-cell]'); if (c && state.view && state.view.rows) { const [r, cc] = c.dataset.cell.split(',').map(Number); state.view.ed.clear(); state.view.r = r; state.view.c = cc; return render(); }
@@ -844,8 +837,8 @@ $('#clearHist')?.addEventListener('click', () => { history = []; saveAll(); rend
 const KB = {
   '0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', '.': 'dot', ',': 'comma',
   '+': 'add', '-': 'sub', '*': 'mul', '/': 'div', '(': 'lp', ')': 'rp', '^': 'pow', '!': 'fact', '%': 'pct', '=': 'eq',
-  Enter: 'exe', Backspace: 'del', Delete: 'ac', Escape: 'back', ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down',
-  x: 'x', s: 'sin', c: 'cos', t: 'tan', l: 'ln', r: 'sqrt', p: 'pi', e: 'e', h: 'home', Shift: null,
+  Enter: 'exe', Backspace: 'del', Delete: 'ac', Escape: 'ac', ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down',
+  x: 'var:x', y: 'var:y', s: 'sin', c: 'cos', t: 'tan', l: 'ln', r: 'sqrt', p: 'pi', e: 'e', m: 'mode', Shift: null,
 };
 document.addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -859,6 +852,7 @@ document.addEventListener('gesturestart', (e) => e.preventDefault());
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 
+launch('calc');
 renderSide();
 render();
 window.__calc = { press, state, settings, vars };
