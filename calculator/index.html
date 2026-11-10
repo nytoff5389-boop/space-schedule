@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>อัศวิน · เครื่องคิดเลขวิทยาศาสตร์</title>
 <meta name="description" content="เครื่องคิดเลขวิทยาศาสตร์สีชมพู ภาษาไทย ใช้บนมือถือและไอแพด">
-<meta name="theme-color" content="#ffe4ec">
+<meta name="theme-color" content="#f9d6de">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -19,8 +19,8 @@
 <link rel="stylesheet" href="calc.css">
 </head>
 <body>
-<div class="stage">
-  <main class="calc" aria-label="เครื่องคิดเลข">
+<main class="calc" aria-label="เครื่องคิดเลข">
+  <div class="left">
     <div class="top">
       <div class="logo">
         <svg class="knight" viewBox="0 0 40 40" aria-hidden="true">
@@ -37,6 +37,25 @@
     </div>
     <div class="lcd-frame"><div id="lcd" class="lcd" aria-live="polite"></div></div>
     <div class="tagline">♡ เครื่องคิดเลขวิทยาศาสตร์</div>
+    <aside class="side">
+    <section>
+      <h2>ประวัติ <button id="clearHist" type="button">ล้าง</button></h2>
+      <ul id="histList" class="hist"></ul>
+    </section>
+    <section class="guide">
+      <h2>วิธีใช้ย่อ ๆ</h2>
+      <ul>
+        <li><b>⌂ หน้าหลัก</b> เลือกแอป: คำนวณ สถิติ สมการ ฯลฯ</li>
+        <li><b>SHIFT</b> แล้วกดปุ่ม = ใช้ฟังก์ชันตัวม่วงด้านบนปุ่ม</li>
+        <li><b>FORMAT</b> เปลี่ยนคำตอบ เศษส่วน ↔ ทศนิยม ↔ องศาลิปดา</li>
+        <li><b>SHIFT + EXE</b> ได้คำตอบเป็นทศนิยมทันที</li>
+        <li>ใส่ <b>=</b> (SHIFT + −) แล้วกด EXE เพื่อแก้สมการหาค่า <i>x</i></li>
+        <li>คีย์บอร์ด: ตัวเลข + − * / ^ ( ) Enter ⌫ ลูกศร</li>
+      </ul>
+    </section>
+  </aside>
+  </div>
+  <div class="right">
     <div class="ctrl">
   <div class="cl">
     <div class="crow"><div class="kw nav"><span class="sl"></span><button class="key" data-k="home" aria-label="home"><span class="kl"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M6 10v9h12v-9"/></svg></span></button><span class=cap>หน้าหลัก</span></div><div class="kw nav"><span class="sl"></span><button class="key" data-k="settings" aria-label="settings"><span class="kl"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></span></button><span class=cap>ตั้งค่า</span></div></div>
@@ -56,25 +75,8 @@
 </div>
 <div class="fn"><div class="kw f"><span class="sl">π</span><button class="key" data-k="x" aria-label="x"><span class="kl"><i>x</i></span></button></div><div class="kw f"><span class="sl"><span class="bx"></span><span class="kfrac sm"><span class="bx"></span><span class="bar"></span><span class="bx"></span></span></span><button class="key" data-k="frac" aria-label="frac"><span class="kl"><span class="kfrac"><span class="bx"></span><span class="bar"></span><span class="bx"></span></span></span></button></div><div class="kw f"><span class="sl"><sup>n</sup>√<span class="bx"></span></span><button class="key" data-k="sqrt" aria-label="sqrt"><span class="kl">√<span class="bx"></span></span></button></div><div class="kw f"><span class="sl"><i>x</i><sup>3</sup></span><button class="key" data-k="sq" aria-label="sq"><span class="kl"><i>x</i><sup>2</sup></span></button></div><div class="kw f"><span class="sl">10<sup><span class="bx"></span></sup></span><button class="key" data-k="pow" aria-label="pow"><span class="kl"><i>x</i><sup><span class="bx"></span></sup></span></button></div><div class="kw f"><span class="sl">ln</span><button class="key" data-k="logb" aria-label="logb"><span class="kl">log<sub><span class="bx"></span></sub></span></button></div><div class="kw f"><span class="sl"><i>x</i>!</span><button class="key" data-k="inv" aria-label="inv"><span class="kl"><i>x</i><sup>−1</sup></span></button></div><div class="kw f"><span class="sl">sin<sup>−1</sup></span><button class="key" data-k="sin" aria-label="sin"><span class="kl">sin</span></button></div><div class="kw f"><span class="sl">cos<sup>−1</sup></span><button class="key" data-k="cos" aria-label="cos"><span class="kl">cos</span></button></div><div class="kw f"><span class="sl">tan<sup>−1</sup></span><button class="key" data-k="tan" aria-label="tan"><span class="kl">tan</span></button></div><div class="kw f"><span class="sl">e<sup>x</sup></span><button class="key" data-k="lp" aria-label="lp"><span class="kl">(</span></button></div><div class="kw f"><span class="sl">,</span><button class="key" data-k="rp" aria-label="rp"><span class="kl">)</span></button></div></div>
 <div class="numpad"><div class="kw n "><span class="sl"></span><button class="key" data-k="7" aria-label="7"><span class="kl">7</span></button></div><div class="kw n "><span class="sl"></span><button class="key" data-k="8" aria-label="8"><span class="kl">8</span></button></div><div class="kw n "><span class="sl"></span><button class="key" data-k="9" aria-label="9"><span class="kl">9</span></button></div><div class="kw n dk"><span class="sl"></span><button class="key" data-k="del" aria-label="del"><span class="kl"><svg viewBox="0 0 24 24"><path d="M8 5h12v14H8l-6-7z"/><path d="M12 9l5 6M17 9l-5 6"/></svg></span></button></div><div class="kw n dk"><span class="sl"></span><button class="key" data-k="ac" aria-label="ac"><span class="kl">AC</span></button></div><div class="kw n "><span class="sl"></span><button class="key" data-k="4" aria-label="4"><span class="kl">4</span></button></div><div class="kw n "><span class="sl"></span><button class="key" data-k="5" aria-label="5"><span class="kl">5</span></button></div><div class="kw n "><span class="sl"></span><button class="key" data-k="6" aria-label="6"><span class="kl">6</span></button></div><div class="kw n "><span class="sl">nPr</span><button class="key" data-k="mul" aria-label="mul"><span class="kl">×</span></button></div><div class="kw n "><span class="sl">nCr</span><button class="key" data-k="div" aria-label="div"><span class="kl">÷</span></button></div><div class="kw n "><span class="sl"></span><button class="key" data-k="1" aria-label="1"><span class="kl">1</span></button></div><div class="kw n "><span class="sl"></span><button class="key" data-k="2" aria-label="2"><span class="kl">2</span></button></div><div class="kw n "><span class="sl"></span><button class="key" data-k="3" aria-label="3"><span class="kl">3</span></button></div><div class="kw n "><span class="sl">%</span><button class="key" data-k="add" aria-label="add"><span class="kl">+</span></button></div><div class="kw n "><span class="sl">=</span><button class="key" data-k="sub" aria-label="sub"><span class="kl">−</span></button></div><div class="kw n "><span class="sl">Ran#</span><button class="key" data-k="0" aria-label="0"><span class="kl">0</span></button></div><div class="kw n "><span class="sl">e</span><button class="key" data-k="dot" aria-label="dot"><span class="kl">.</span></button></div><div class="kw n "><span class="sl">Ans</span><button class="key" data-k="exp" aria-label="exp"><span class="kl">×10<sup><i>x</i></sup></span></button></div><div class="kw n "><span class="sl"></span><button class="key" data-k="format" aria-label="format"><span class="kl"><span class="small">FORMAT</span></span></button></div><div class="kw n exe"><span class="sl">≈</span><button class="key" data-k="exe" aria-label="exe"><span class="kl"><span class="small">EXE</span></span></button></div></div>
-  </main>
-  <aside class="side">
-    <section>
-      <h2>ประวัติ <button id="clearHist" type="button">ล้าง</button></h2>
-      <ul id="histList" class="hist"></ul>
-    </section>
-    <section class="guide">
-      <h2>วิธีใช้ย่อ ๆ</h2>
-      <ul>
-        <li><b>⌂ หน้าหลัก</b> เลือกแอป: คำนวณ สถิติ สมการ ฯลฯ</li>
-        <li><b>SHIFT</b> แล้วกดปุ่ม = ใช้ฟังก์ชันตัวม่วงด้านบนปุ่ม</li>
-        <li><b>FORMAT</b> เปลี่ยนคำตอบ เศษส่วน ↔ ทศนิยม ↔ องศาลิปดา</li>
-        <li><b>SHIFT + EXE</b> ได้คำตอบเป็นทศนิยมทันที</li>
-        <li>ใส่ <b>=</b> (SHIFT + −) แล้วกด EXE เพื่อแก้สมการหาค่า <i>x</i></li>
-        <li>คีย์บอร์ด: ตัวเลข + − * / ^ ( ) Enter ⌫ ลูกศร</li>
-      </ul>
-    </section>
-  </aside>
-</div>
+  </div>
+</main>
 <script type="module" src="app.js"></script>
 </body>
 </html>
