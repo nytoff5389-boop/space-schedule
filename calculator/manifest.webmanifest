@@ -1,0 +1,16 @@
+{
+  "name": "อัศวิน เครื่องคิดเลขวิทยาศาสตร์",
+  "short_name": "อัศวิน",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffe4ec",
+  "theme_color": "#ffe4ec",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
