@@ -14,6 +14,7 @@
   --fn-top: #f6c4d1; --fn-bot: #eba8ba; --fn-edge: #c97f95;
   --mint-top: #c9f2df; --mint-bot: #a6e3c8; --mint-edge: #6fbf9c; --mint-ink: #1f6b50;
   --exe-top: #ffb3c9; --exe-bot: #f58fae; --exe-edge: #cf6489;
+  --u: min(1vw, .47vh);
   --u: min(1vw, .47dvh);
   color-scheme: light;
   -webkit-text-size-adjust: 100%;
@@ -143,7 +144,7 @@ body.shifted .sl .s { color: #6d2fb5; text-shadow: 0 0 calc(.8 * var(--u)) rgba(
 
 /* ================= wide landscape: screen left, keys right ================= */
 @media (orientation: landscape) and (min-aspect-ratio: 5/4) {
-  :root { --u: min(.5vw, .75dvh); }
+  :root { --u: min(.5vw, .75vh); --u: min(.5vw, .75dvh); }
   .calc { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); grid-template-rows: minmax(0, 1fr); column-gap: calc(4 * var(--u)); }
   .left { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; row-gap: calc(1.4 * var(--u)); min-height: 0; }
   .right { display: grid; grid-template-rows: minmax(0, 16fr) minmax(0, 27fr) minmax(0, 38fr); row-gap: calc(1.4 * var(--u)); min-height: 0; }
@@ -269,3 +270,16 @@ i, .im { font-family: 'Sarabun', serif; font-style: italic; }
 .stab td.on { background: var(--lcd-ink); color: var(--lcd); }
 .sinput { margin-top: auto; text-align: right; font-size: calc(4.4 * var(--lu)); border-top: calc(.3 * var(--lu)) dashed rgba(34, 48, 43, .25); padding-top: calc(.6 * var(--lu)); min-height: calc(7 * var(--lu)); white-space: nowrap; overflow: hidden; }
 
+
+/* very short screens (phones in landscape, split screen) */
+@media (max-height: 450px) {
+  .tagline { display: none; }
+  .solar { display: none; }
+  .left { row-gap: calc(.8 * var(--u)) !important; }
+  .right { row-gap: calc(.6 * var(--u)) !important; }
+  .sl { height: calc(2.6 * var(--u)); font-size: calc(2.2 * var(--u)); }
+}
+/* wide-but-portrait screens (foldables opened, small tablets): give labels more room */
+@media (orientation: portrait) and (min-aspect-ratio: 7/10) {
+  :root { --u: min(.8vw, .5vh); --u: min(.8vw, .5dvh); }
+}
