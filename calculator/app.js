@@ -1,4 +1,4 @@
-import * as E from './engine.js';
+import * as E from './engine.js?v=4';
 const { C, CalcError, ERR_TEXT } = E;
 
 // ======================= persistence =======================
@@ -850,7 +850,7 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false });
 document.addEventListener('gesturestart', (e) => e.preventDefault());
 
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
 
 launch('calc');
 renderSide();
