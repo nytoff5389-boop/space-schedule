@@ -81,7 +81,7 @@ function kindFromCode(c) {
 // TMD 7-day: Thai description + % of area with rain.
 function kindFromTmd(desc, pct) {
   const d = desc || '';
-  if (/คะนอง/.test(d) && (pct ?? 0) >= 20) return 'storm';
+  if (/คะนอง/.test(d) && (pct ?? 0) >= 10) return 'storm';
   if ((pct ?? 0) >= 60) return /หนัก/.test(d) ? 'heavy' : 'rain';
   if ((pct ?? 0) >= 30) return 'rain';
   if (/หมอก/.test(d)) return 'fog';
@@ -172,14 +172,23 @@ function parseStations(doc, kind) {
   return list;
 }
 
-// Warning feed: shape is not documented, so read it defensively and only use clear Thai text.
+// Warning feed: many <Warning> items (TitleThai, HeadlineThai, DescriptionThai, AnnounceDate,
+// EffectStartDate, EffectEndDate). Keep only ones still in effect that concern Chiang Mai.
 function parseWarning(doc) {
-  const root = doc.documentElement;
-  const title = deep(root, 'TitleThai')[0] || deep(root, 'HeadlineThai')[0];
-  const body = deep(root, 'DescriptionThai')[0] || deep(root, 'DetailThai')[0];
-  const date = deep(root, 'AnnounceDateTime')[0] || deep(root, 'AnnounceDate')[0] || deep(root, 'IssueDate')[0];
-  if (!title) return null;
-  return { title: title.textContent.trim(), body: body ? body.textContent.trim() : '', date: date ? date.textContent.trim() : '' };
+  const items = deep(doc.documentElement, 'Warning');
+  const now = Date.now();
+  const toDate = v => { const m = (v || '').match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/); return m ? bkk(m[1], m[2], m[3], m[4], m[5]) : null; };
+  const hits = [];
+  for (const w of items) {
+    const title = txt(w, 'TitleThai'), head = txt(w, 'HeadlineThai'), body = txt(w, 'DescriptionThai');
+    if (!title) continue;
+    const end = toDate(txt(w, 'EffectEndDate'));
+    if (end && end.getTime() < now) continue;
+    const all = `${title} ${head} ${body}`;
+    if (!/เชียงใหม่|ภาคเหนือ|ประเทศไทยตอนบน|ทั่วประเทศ|ทุกภาค/.test(all)) continue;
+    hits.push({ title, body: head || body, date: txt(w, 'AnnounceDate') });
+  }
+  return hits[0] || null;
 }
 
 // ---------- fetching ----------
@@ -547,7 +556,7 @@ function renderWarning() {
   const el = $('warn');
   if (!w || !w.title) { el.hidden = true; return; }
   el.hidden = false;
-  el.innerHTML = `<b>⚠️ ${esc(w.title)}</b>${w.date ? `<small>${esc(w.date)}</small><br>` : ''}${esc(w.body).slice(0, 260)}${w.body.length > 260 ? '… ' : ' '}<a href="https://www.tmd.go.th/warning-and-events/warning-storm" target="_blank" rel="noopener">อ่านต่อที่กรมอุตุฯ</a>`;
+  el.innerHTML = `<b>⚠️ ${esc(w.title)}</b>${w.date ? `<small>ประกาศ ${esc(w.date.slice(0, 16))} น.</small><br>` : ''}${esc(w.body).slice(0, 260)}${w.body.length > 260 ? '… ' : ' '}<a href="https://www.tmd.go.th/warning-and-events/warning-storm" target="_blank" rel="noopener">อ่านต่อที่กรมอุตุฯ</a>`;
 }
 
 // ---------- background ----------
