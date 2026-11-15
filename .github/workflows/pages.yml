@@ -3,6 +3,10 @@ name: Deploy website
 on:
   push:
     branches: [main]
+  schedule:
+    # Hourly refresh of the Thai Meteorological Department feeds used by /weather.
+    # GitHub often starts scheduled runs late; the page also reads live model data itself.
+    - cron: '41 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -23,6 +27,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Copy TMD weather feeds for /weather
+        continue-on-error: true
+        run: node weather/fetch-tmd.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
