@@ -261,7 +261,7 @@ const dist = (a, b, c, d) => { const R = Math.PI / 180, x = (d - b) * R * Math.c
 // ---------- state ----------
 const state = {
   place: CM,
-  coords: null, loc: store.get('wx.loc', null), locNote: '', tmd: null, model: null, climate: null, updated: null, tab: store.get('wx.tab', 'week'),
+  coords: null, loc: store.get('wx.loc', null), locNote: '', manual: store.get('wx.area', null), areas: null, tmd: null, model: null, climate: null, updated: null, tab: store.get('wx.tab', 'week'),
 };
 
 function getPosition() {
@@ -289,6 +289,11 @@ async function placeName(lat, lon) {
   return out;
 }
 async function resolveCoords() {
+  if (state.manual) {
+    state.loc = { ...state.manual, gps: false };
+    state.locNote = '';
+    return { lat: state.loc.lat, lon: state.loc.lon };
+  }
   try {
     const pos = await getPosition();
     let info = null;
@@ -306,7 +311,7 @@ async function resolveCoords() {
     const denied = e && e.code === 1;
     if (!state.loc) state.loc = { lat: CM.lat, lon: CM.lon, label: 'ตัวเมืองเชียงใหม่', gps: false };
     state.locNote = denied
-      ? 'ยังไม่ได้อนุญาตตำแหน่ง จึงแสดงอากาศ' + (state.loc.gps ? 'จากตำแหน่งล่าสุด' : 'ตัวเมืองเชียงใหม่') + ' · เปิดได้ที่ การตั้งค่า › Safari/Chrome › ตำแหน่ง แล้วแตะปุ่มชื่อสถานที่ด้านบน'
+      ? 'ยังไม่ได้อนุญาตตำแหน่ง จึงแสดงอากาศ' + (state.loc.gps ? 'จากตำแหน่งล่าสุด' : 'ตัวเมืองเชียงใหม่') + ' · แตะชื่อสถานที่ด้านบนเพื่อเลือกอำเภอ/ตำบลเอง หรือเปิดสิทธิ์ตำแหน่งในการตั้งค่าของเบราว์เซอร์'
       : state.loc.gps ? 'หาตำแหน่งรอบนี้ไม่ได้ ใช้ตำแหน่งล่าสุด' : 'หาตำแหน่งไม่ได้ จึงแสดงอากาศตัวเมืองเชียงใหม่';
   }
   return { lat: state.loc.lat, lon: state.loc.lon };
@@ -582,6 +587,51 @@ function renderCredits() {
     `<li>${k === bgKey ? '▶ ' : ''}${names[k] || k}: <a href="${esc(c.page)}" target="_blank" rel="noopener">${esc(c.title.replace(/\.jpe?g$/i, ''))}</a> โดย ${esc(c.author)} · ${c.licenseUrl ? `<a href="${esc(c.licenseUrl)}" target="_blank" rel="noopener">${esc(c.license)}</a>` : esc(c.license)}</li>`).join('');
 }
 
+// ---------- area picker (districts / subdistricts of Chiang Mai) ----------
+async function openPicker() {
+  if (!state.areas) {
+    try { state.areas = await fetchJson('cm-areas.json'); } catch { state.areas = []; }
+  }
+  $('areaSearch').value = '';
+  fillAreas('');
+  $('gpsBtn').classList.toggle('sel', !state.manual);
+  $('areaDlg').showModal();
+  setTimeout(() => $('areaList').querySelector('.sel')?.scrollIntoView({ block: 'center' }), 30);
+}
+function areaBtn(label, lat, lon, html) {
+  const sel = state.manual && state.manual.label === label ? ' sel' : '';
+  return `<button type="button" class="pick${sel}" data-label="${esc(label)}" data-lat="${lat}" data-lon="${lon}">${html}</button>`;
+}
+function fillAreas(q) {
+  const qq = q.trim().toLowerCase();
+  const A = state.areas || [];
+  let html = '';
+  if (qq) {
+    for (const a of A) {
+      if (a.a.includes(qq) || a.en.toLowerCase().includes(qq)) html += `<li>${areaBtn('อ.' + a.a, a.lat, a.lon, `อ.${esc(a.a)} <small>ทั้งอำเภอ</small>`)}</li>`;
+      for (const [th, en, lat, lon] of a.t) if (th.includes(qq) || en.toLowerCase().includes(qq))
+        html += `<li>${areaBtn(`อ.${a.a} · ต.${th}`, lat, lon, `ต.${esc(th)} <small>อ.${esc(a.a)}</small>`)}</li>`;
+    }
+    if (!html) html = '<li class="empty">ไม่พบชื่อนี้ในเชียงใหม่</li>';
+  } else {
+    for (const a of A) {
+      const open = state.manual?.label?.startsWith(`อ.${a.a}`) ? ' open' : '';
+      html += `<li class="amp${open}"><button type="button" class="amp-h" data-open>อ.${esc(a.a)} <small>${a.t.length} ตำบล</small><span class="chev">›</span></button>
+        <ul>${'<li>' + areaBtn('อ.' + a.a, a.lat, a.lon, 'ทั้งอำเภอ') + '</li>'}${a.t.map(([th, , lat, lon]) => `<li>${areaBtn(`อ.${a.a} · ต.${th}`, lat, lon, 'ต.' + esc(th))}</li>`).join('')}</ul></li>`;
+    }
+  }
+  $('areaList').innerHTML = html;
+}
+function chooseArea(area) {
+  state.manual = area;
+  store.set('wx.area', area);
+  bgKey = null;
+  $('areaDlg').close();
+  if (area) { state.loc = { ...area, gps: false }; $('placeName').textContent = area.label; }
+  else $('placeName').textContent = 'กำลังหาตำแหน่ง…';
+  refresh();
+}
+
 // ---------- day detail ----------
 const SEVERITY = ['clear', 'mostly', 'partly', 'cloudy', 'overcast', 'fog', 'drizzle', 'rain', 'heavy', 'storm'];
 const PERIODS = [['ช่วงดึก', '00–06 น.', 0, 6], ['ช่วงเช้า', '06–12 น.', 6, 12], ['ช่วงบ่าย', '12–18 น.', 12, 18], ['ช่วงค่ำ', '18–24 น.', 18, 24]];
@@ -686,7 +736,15 @@ function setTab(t) {
 
 // ---------- init ----------
 function init() {
-  $('placeBtn').addEventListener('click', () => { bgKey = null; refresh(); });
+  $('placeBtn').addEventListener('click', openPicker);
+  $('areaSearch').addEventListener('input', e => fillAreas(e.target.value));
+  $('areaList').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.open != null) { const li = b.closest('li'); li.classList.toggle('open'); return; }
+    if (b.dataset.lat) chooseArea({ label: b.dataset.label, lat: +b.dataset.lat, lon: +b.dataset.lon });
+  });
+  $('gpsBtn').addEventListener('click', () => chooseArea(null));
   $('tabWeek').addEventListener('click', () => setTab('week'));
   $('tabMonth').addEventListener('click', () => setTab('month'));
   setTab(state.tab);
