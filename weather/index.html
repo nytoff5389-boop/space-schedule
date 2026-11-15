@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ฟ้าวันนี้ · พยากรณ์อากาศ</title>
+<meta name="description" content="พยากรณ์อากาศไทย ข้อมูลกรมอุตุนิยมวิทยา อุณหภูมิตัวใหญ่ รายสัปดาห์และรายเดือน อัปเดตอัตโนมัติ">
+<meta name="theme-color" content="#1d3b5c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ฟ้าวันนี้">
+<link rel="apple-touch-icon" href="icon-180.jpg">
+<link rel="icon" href="icon-192.jpg" type="image/jpeg">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="weather.css?v=1">
+</head>
+<body>
+<div id="bg" class="bg" aria-hidden="true"></div>
+<div id="bg2" class="bg" aria-hidden="true"></div>
+<div class="shade" aria-hidden="true"></div>
+
+<main class="wrap">
+  <header class="top">
+    <button id="placeBtn" class="place" type="button" aria-haspopup="dialog">
+      <span class="pin">📍</span><span id="placeName">กำลังโหลด…</span><span class="caret">▾</span>
+    </button>
+    <div class="live" id="live" title="อัปเดตอัตโนมัติทุก 10 นาที">
+      <i class="dot"></i><span id="liveText">กำลังโหลด</span>
+    </div>
+  </header>
+
+  <section class="hero" aria-live="polite">
+    <div class="now-label" id="nowLabel">ตอนนี้</div>
+    <div class="big"><span id="nowTemp">--</span><span class="deg">°</span></div>
+    <div class="cond" id="nowCond">&nbsp;</div>
+    <div class="hilo" id="nowHiLo">&nbsp;</div>
+    <div class="src" id="nowSrc">&nbsp;</div>
+  </section>
+
+  <div id="warn" class="warn" hidden></div>
+
+  <section class="tiles" id="tiles" aria-label="รายละเอียด"></section>
+
+  <section class="card">
+    <h2>รายชั่วโมง <small>24 ชม. ข้างหน้า</small></h2>
+    <div class="hours" id="hours"></div>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tabWeek" aria-selected="true" type="button">7 วัน</button>
+    <button role="tab" id="tabMonth" aria-selected="false" type="button">30 วัน</button>
+  </nav>
+
+  <section class="card" id="weekCard">
+    <div id="week" class="week"></div>
+    <p class="note" id="weekNote"></p>
+  </section>
+
+  <section class="card" id="monthCard" hidden>
+    <div class="legend">
+      <span><i class="lg tmd"></i>กรมอุตุฯ พยากรณ์</span>
+      <span><i class="lg model"></i>แบบจำลอง Open-Meteo</span>
+      <span><i class="lg clim"></i>ค่าเฉลี่ย 5 ปีที่ผ่านมา (ไม่ใช่พยากรณ์)</span>
+    </div>
+    <div class="cal-head" id="calHead"></div>
+    <div class="cal" id="cal"></div>
+    <p class="note">ไม่มีหน่วยงานไหนพยากรณ์รายวันล่วงหน้าได้แม่นทั้งเดือน วันที่ไกลเกิน 16 วันจึงแสดงเป็น <b>ค่าเฉลี่ยของวันเดียวกันใน 5 ปีที่ผ่านมา</b> เพื่อให้เห็นแนวโน้ม ไม่ใช่ตัวเลขพยากรณ์</p>
+  </section>
+
+  <footer class="foot">
+    <p><b>แหล่งข้อมูล</b></p>
+    <ul>
+      <li>อุณหภูมิที่วัดจริง, พยากรณ์ 7 วัน: <a href="https://www.tmd.go.th/" target="_blank" rel="noopener">กรมอุตุนิยมวิทยา</a> (<a href="https://data.tmd.go.th/api/" target="_blank" rel="noopener">TMD Open Data</a>) สถานีวัดจริงรายงานทุก 3 ชั่วโมง</li>
+      <li>รายชั่วโมง, 16 วัน, ค่าตอนนี้ระหว่างรอบรายงานสถานี: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0) เป็นแบบจำลองของต่างประเทศ ไม่ใช่ข้อมูลกรมอุตุฯ</li>
+    </ul>
+    <p><b>เครดิตภาพท้องฟ้า</b> (Wikimedia Commons)</p>
+    <ul id="credits" class="credits"></ul>
+  </footer>
+</main>
+
+<dialog id="placeDlg" class="dlg">
+  <form method="dialog">
+    <h2>เลือกจังหวัด</h2>
+    <button id="geoBtn" class="geo" type="button">📍 ใช้ตำแหน่งของฉัน</button>
+    <input id="placeSearch" type="search" placeholder="ค้นหาจังหวัด" autocomplete="off">
+    <ul id="placeList" class="plist"></ul>
+    <button class="close" value="cancel">ปิด</button>
+  </form>
+</dialog>
+
+<script src="app.js?v=1"></script>
+</body>
+</html>

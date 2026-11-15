@@ -32,3 +32,10 @@ GitHub Actions (`.github/workflows/notify.yml`) รันทุกเช้า 0
 - โลกและเมฆ/ไฟเมือง: texture จาก three.js examples (ข้อมูลต้นฉบับ NASA Blue Marble) เรนเดอร์สดด้วย WebGL (`js/planet.js`)
 - ทางช้างเผือก: three.js examples MilkyWay cubemap
 - ยานอวกาศ: เรนเดอร์สดด้วย ray-marching shader (`js/ship.js`) ไม่ใช้ไฟล์ภาพ
+
+## /weather — ฟ้าวันนี้ (พยากรณ์อากาศ)
+
+A separate weather page at `/weather/`. Data:
+- Thai Meteorological Department open data (public example key): station observations every 3 h, today's max/min, 7-day province forecast, warnings. The browser tries `data.tmd.go.th` directly; if blocked, it reads the copy that `weather/fetch-tmd.mjs` saves during the hourly Pages deploy (`pages.yml` schedule).
+- Open-Meteo (labelled on the page): model "now" between TMD reports, hourly, days 8–16, and 5-year averages for days 17–30.
+- Background photos: Wikimedia Commons, credits in `weather/img/credits.json` and on the page.
