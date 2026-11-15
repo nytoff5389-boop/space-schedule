@@ -18,25 +18,9 @@ const TMD_FEEDS = {
 const REFRESH_MS = 10 * 60 * 1000;
 const TZ = 'Asia/Bangkok';
 
-// 77 provinces: Thai name, English name (English is used to look up coordinates).
-const PROVINCES = [
-  ['กรุงเทพมหานคร','Bangkok'],['กระบี่','Krabi'],['กาญจนบุรี','Kanchanaburi'],['กาฬสินธุ์','Kalasin'],['กำแพงเพชร','Kamphaeng Phet'],
-  ['ขอนแก่น','Khon Kaen'],['จันทบุรี','Chanthaburi'],['ฉะเชิงเทรา','Chachoengsao'],['ชลบุรี','Chon Buri'],['ชัยนาท','Chai Nat'],
-  ['ชัยภูมิ','Chaiyaphum'],['ชุมพร','Chumphon'],['เชียงราย','Chiang Rai'],['เชียงใหม่','Chiang Mai'],['ตรัง','Trang'],
-  ['ตราด','Trat'],['ตาก','Tak'],['นครนายก','Nakhon Nayok'],['นครปฐม','Nakhon Pathom'],['นครพนม','Nakhon Phanom'],
-  ['นครราชสีมา','Nakhon Ratchasima'],['นครศรีธรรมราช','Nakhon Si Thammarat'],['นครสวรรค์','Nakhon Sawan'],['นนทบุรี','Nonthaburi'],['นราธิวาส','Narathiwat'],
-  ['น่าน','Nan'],['บึงกาฬ','Bueng Kan'],['บุรีรัมย์','Buri Ram'],['ปทุมธานี','Pathum Thani'],['ประจวบคีรีขันธ์','Prachuap Khiri Khan'],
-  ['ปราจีนบุรี','Prachin Buri'],['ปัตตานี','Pattani'],['พระนครศรีอยุธยา','Phra Nakhon Si Ayutthaya'],['พะเยา','Phayao'],['พังงา','Phangnga'],
-  ['พัทลุง','Phatthalung'],['พิจิตร','Phichit'],['พิษณุโลก','Phitsanulok'],['เพชรบุรี','Phetchaburi'],['เพชรบูรณ์','Phetchabun'],
-  ['แพร่','Phrae'],['ภูเก็ต','Phuket'],['มหาสารคาม','Maha Sarakham'],['มุกดาหาร','Mukdahan'],['แม่ฮ่องสอน','Mae Hong Son'],
-  ['ยโสธร','Yasothon'],['ยะลา','Yala'],['ร้อยเอ็ด','Roi Et'],['ระนอง','Ranong'],['ระยอง','Rayong'],
-  ['ราชบุรี','Ratchaburi'],['ลพบุรี','Lop Buri'],['ลำปาง','Lampang'],['ลำพูน','Lamphun'],['เลย','Loei'],
-  ['ศรีสะเกษ','Si Sa Ket'],['สกลนคร','Sakon Nakhon'],['สงขลา','Songkhla'],['สตูล','Satun'],['สมุทรปราการ','Samut Prakan'],
-  ['สมุทรสงคราม','Samut Songkhram'],['สมุทรสาคร','Samut Sakhon'],['สระแก้ว','Sa Kaeo'],['สระบุรี','Saraburi'],['สิงห์บุรี','Sing Buri'],
-  ['สุโขทัย','Sukhothai'],['สุพรรณบุรี','Suphan Buri'],['สุราษฎร์ธานี','Surat Thani'],['สุรินทร์','Surin'],['หนองคาย','Nong Khai'],
-  ['หนองบัวลำภู','Nong Bua Lam Phu'],['อ่างทอง','Ang Thong'],['อำนาจเจริญ','Amnat Charoen'],['อุดรธานี','Udon Thani'],['อุตรดิตถ์','Uttaradit'],
-  ['อุทัยธานี','Uthai Thani'],['อุบลราชธานี','Ubon Ratchathani'],
-];
+// Chiang Mai only. The exact point comes from the device location when allowed.
+const CM = { th: 'เชียงใหม่', en: 'Chiang Mai', lat: 18.7883, lon: 98.9853 };
+const inCmBox = (lat, lon) => lat > 17.2 && lat < 20.2 && lon > 97.9 && lon < 99.7;
 
 const TH_DOW = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
 const TH_DOW_LONG = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสฯ', 'ศุกร์', 'เสาร์'];
@@ -236,7 +220,7 @@ async function loadTmd() {
 }
 
 const OM_CURRENT = 'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,uv_index,visibility';
-const OM_HOURLY = 'temperature_2m,precipitation_probability,weather_code,is_day';
+const OM_HOURLY = 'temperature_2m,precipitation_probability,precipitation,weather_code,is_day,relative_humidity_2m,wind_speed_10m';
 const OM_DAILY = 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant,sunrise,sunset,uv_index_max';
 function loadModel(lat, lon) {
   const q = new URLSearchParams({ latitude: lat.toFixed(3), longitude: lon.toFixed(3), current: OM_CURRENT, hourly: OM_HOURLY, daily: OM_DAILY, timezone: TZ, forecast_days: 16 });
@@ -272,36 +256,60 @@ async function loadClimate(lat, lon, from, to) {
   return out;
 }
 
-async function geocode(p) {
-  const cache = store.get('wx.geo', {});
-  if (cache[p.th]) return cache[p.th];
-  const q = new URLSearchParams({ name: p.en, count: 10, language: 'en', format: 'json', countryCode: 'TH' });
-  const r = await fetchJson('https://geocoding-api.open-meteo.com/v1/search?' + q);
-  const hit = (r.results || []).find(x => x.feature_code?.startsWith('PPLA')) || (r.results || [])[0];
-  if (!hit) throw new Error('geocode');
-  cache[p.th] = { lat: hit.latitude, lon: hit.longitude };
-  store.set('wx.geo', cache);
-  return cache[p.th];
-}
-
 const dist = (a, b, c, d) => { const R = Math.PI / 180, x = (d - b) * R * Math.cos((a + c) / 2 * R), y = (c - a) * R; return 6371 * Math.hypot(x, y); };
 
 // ---------- state ----------
 const state = {
-  place: store.get('wx.place', { th: 'เชียงใหม่', en: 'Chiang Mai' }),
-  coords: null, gps: false, tmd: null, model: null, climate: null, updated: null, tab: store.get('wx.tab', 'week'),
+  place: CM,
+  coords: null, loc: store.get('wx.loc', null), locNote: '', tmd: null, model: null, climate: null, updated: null, tab: store.get('wx.tab', 'week'),
 };
 
+function getPosition() {
+  return new Promise((res, rej) => {
+    if (!navigator.geolocation) return rej(new Error('unsupported'));
+    navigator.geolocation.getCurrentPosition(p => res({ lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy }),
+      e => rej(e), { enableHighAccuracy: false, timeout: 12000, maximumAge: 5 * 6e4 });
+  });
+}
+// District / subdistrict name for the point (free, no key; Thai names).
+async function placeName(lat, lon) {
+  const key = `${lat.toFixed(3)},${lon.toFixed(3)}`;
+  const cache = store.get('wx.rgeo', {});
+  if (cache[key]) return cache[key];
+  const q = new URLSearchParams({ latitude: lat, longitude: lon, localityLanguage: 'th' });
+  const r = await fetchJson('https://api.bigdatacloud.net/data/reverse-geocode-client?' + q, 8000);
+  const adm = r.localityInfo?.administrative || [];
+  const find = re => adm.map(x => x.name || '').find(n => re.test(n));
+  const amphoe = find(/^(อำเภอ|เขต)/);
+  const tambon = find(/^(ตำบล|แขวง)/) || (r.locality && r.locality !== r.city ? r.locality : '');
+  const short = n => (n || '').replace(/^อำเภอ/, 'อ.').replace(/^ตำบล/, 'ต.');
+  const out = { label: [short(amphoe), short(tambon)].filter(Boolean).join(' · ') || r.locality || r.city || '', prov: r.principalSubdivision || '' };
+  cache[key] = out;
+  store.set('wx.rgeo', cache);
+  return out;
+}
 async function resolveCoords() {
-  if (state.place.lat != null) return { lat: state.place.lat, lon: state.place.lon };
-  // Prefer the TMD station in this province nearest the city centre.
-  let c = null;
-  try { c = await geocode(state.place); } catch { /* fall back to station */ }
-  if (!c) {
-    const st = (state.tmd?.obs || []).find(s => norm(s.prov) === norm(state.place.th) && s.lat != null);
-    if (st) c = { lat: st.lat, lon: st.lon };
+  try {
+    const pos = await getPosition();
+    let info = null;
+    try { info = await placeName(pos.lat, pos.lon); } catch { /* name is optional */ }
+    const inCm = info?.prov ? /เชียงใหม่|Chiang Mai/i.test(info.prov) : inCmBox(pos.lat, pos.lon);
+    if (!inCm) {
+      state.loc = { lat: CM.lat, lon: CM.lon, label: 'ตัวเมืองเชียงใหม่', gps: false };
+      state.locNote = 'ตอนนี้คุณอยู่นอกจังหวัดเชียงใหม่ จึงแสดงอากาศตัวเมืองเชียงใหม่';
+    } else {
+      state.loc = { lat: pos.lat, lon: pos.lon, label: info?.label || 'เชียงใหม่ (ตำแหน่งของคุณ)', gps: true };
+      state.locNote = '';
+    }
+    store.set('wx.loc', state.loc);
+  } catch (e) {
+    const denied = e && e.code === 1;
+    if (!state.loc) state.loc = { lat: CM.lat, lon: CM.lon, label: 'ตัวเมืองเชียงใหม่', gps: false };
+    state.locNote = denied
+      ? 'ยังไม่ได้อนุญาตตำแหน่ง จึงแสดงอากาศ' + (state.loc.gps ? 'จากตำแหน่งล่าสุด' : 'ตัวเมืองเชียงใหม่') + ' · เปิดได้ที่ การตั้งค่า › Safari/Chrome › ตำแหน่ง แล้วแตะปุ่มชื่อสถานที่ด้านบน'
+      : state.loc.gps ? 'หาตำแหน่งรอบนี้ไม่ได้ ใช้ตำแหน่งล่าสุด' : 'หาตำแหน่งไม่ได้ จึงแสดงอากาศตัวเมืองเชียงใหม่';
   }
-  return c || { lat: 18.788, lon: 98.985 };
+  return { lat: state.loc.lat, lon: state.loc.lon };
 }
 
 function pickStation(list, lat, lon, maxKm = 60) {
@@ -315,7 +323,7 @@ let busy = false;
 async function refresh() {
   if (busy) return;
   busy = true;
-  setLive('busy', 'กำลังอัปเดต…');
+  setLive('busy', 'อัปเดต…');
   try {
     state.tmd = await loadTmd();
     const c = await resolveCoords();
@@ -327,11 +335,13 @@ async function refresh() {
     state.updated = new Date();
     render();
     const anyTmd = state.tmd.obs.length || state.tmd.forecast7;
+    hideSplash();
     if (!anyTmd && !model) setLive('err', 'โหลดข้อมูลไม่ได้');
-    else setLive('ok', 'อัปเดต ' + hm(state.updated) + ' น.');
+    else setLive('ok', hm(state.updated) + ' น.');
   } catch (e) {
     console.error(e);
     setLive('err', 'โหลดข้อมูลไม่ได้');
+    hideSplash();
   } finally { busy = false; }
 }
 
@@ -344,9 +354,13 @@ function setLive(cls, text) {
 // ---------- render ----------
 function render() {
   const p = state.place;
-  $('placeName').textContent = state.gps ? `${p.th} (ตำแหน่งของฉัน)` : p.th;
-  document.title = `${p.th} · ฟ้าวันนี้`;
+  const label = state.loc?.label || 'ตัวเมืองเชียงใหม่';
+  $('placeName').textContent = label;
+  $('locNote').textContent = state.locNote;
+  $('locNote').hidden = !state.locNote;
+  document.title = `${label} · ฟ้าวันนี้`;
   const days = buildDays();
+  state.days = days;
   renderNow(days);
   renderTiles(days);
   renderHours();
@@ -416,7 +430,8 @@ function renderNow(days) {
     : '&nbsp;';
   const lines = [];
   if (st && st.temp != null) {
-    lines.push(`🌡️ วัดจริงที่สถานี${esc(st.name || st.nameEn)} ${r0(st.temp)}° เวลา ${hm(st.time)} น. <span class="badge tmd">กรมอุตุฯ</span>`);
+    const km = state.coords && st.lat != null ? Math.round(dist(state.coords.lat, state.coords.lon, st.lat, st.lon)) : null;
+    lines.push(`🌡️ วัดจริงที่สถานี${esc(st.name || st.nameEn)}${km != null ? ` (ห่าง ${km} กม.)` : ''} ${r0(st.temp)}° เวลา ${hm(st.time)} น. <span class="badge tmd">กรมอุตุฯ</span>`);
   }
   if (cur) {
     const curTime = new Date(cur.time + ':00+07:00');
@@ -493,7 +508,7 @@ function renderWeek(days) {
     if (d.windKmh != null) meta.push(`<span>🌬️ ${r0(d.windKmh)} กม./ชม.${d.windDir != null ? ' ' + compass(d.windDir) : ''}</span>`);
     if (d.tempDesc && d.tempDesc !== '-') meta.push(`<span>🌡️ ${esc(d.tempDesc)}</span>`);
     meta.push(srcBadge(d.src));
-    return `<div class="day"><div class="dn">${name}<small>${dayNum(d.date)} ${monTh(d.date)}</small></div><div class="ic">${d.kind ? KINDS[d.kind][1] : ''}</div><div class="desc">${esc(desc)}</div><div class="tt"><span class="hi">${r0(d.max)}°</span><span class="lo">${r0(d.min)}°</span></div><div class="meta">${meta.join('')}</div></div>`;
+    return `<div class="day" role="button" tabindex="0" data-date="${d.date}"><div class="dn">${name}<small>${dayNum(d.date)} ${monTh(d.date)}</small></div><div class="ic">${d.kind ? KINDS[d.kind][1] : ''}</div><div class="desc">${esc(desc)}</div><div class="tt"><span class="hi">${r0(d.max)}°</span><span class="lo">${r0(d.min)}°</span></div><div class="meta">${meta.join('')}</div></div>`;
   }).join('');
   const tp = tmdProvince();
   const built = state.tmd?.built?.forecast7;
@@ -517,7 +532,7 @@ function renderMonth(days) {
     const lbl = first ? `<b>${dayNum(d.date)}</b> ${monTh(d.date)}` : `<b>${dayNum(d.date)}</b>`;
     if (d.src === 'none') { html += `<div class="cell clim${d.date === t0 ? ' today' : ''}"><div class="d">${lbl}</div><div class="i">·</div></div>`; continue; }
     const rain = d.rainPct != null && d.rainPct >= 20 ? `💧${r0(d.rainPct)}%` : '';
-    html += `<div class="cell ${d.src}${d.date === t0 ? ' today' : ''}" title="${d.src === 'clim' ? 'ค่าเฉลี่ย 5 ปี ไม่ใช่พยากรณ์' : d.src === 'tmd' ? 'กรมอุตุนิยมวิทยา' : 'Open-Meteo'}"><div class="d">${lbl}</div><div class="i">${d.kind ? KINDS[d.kind][1] : ''}</div><div class="hi">${r0(d.max)}°</div><div class="lo">${r0(d.min)}°</div><div class="r">${rain}</div></div>`;
+    html += `<div class="cell ${d.src}${d.date === t0 ? ' today' : ''}" role="button" tabindex="0" data-date="${d.date}" title="${d.src === 'clim' ? 'ค่าเฉลี่ย 5 ปี ไม่ใช่พยากรณ์' : d.src === 'tmd' ? 'กรมอุตุนิยมวิทยา' : 'Open-Meteo'}"><div class="d">${lbl}</div><div class="i">${d.kind ? KINDS[d.kind][1] : ''}</div><div class="hi">${r0(d.max)}°</div><div class="lo">${r0(d.min)}°</div><div class="r">${rain}</div></div>`;
   }
   $('cal').innerHTML = html;
 }
@@ -567,38 +582,96 @@ function renderCredits() {
     `<li>${k === bgKey ? '▶ ' : ''}${names[k] || k}: <a href="${esc(c.page)}" target="_blank" rel="noopener">${esc(c.title.replace(/\.jpe?g$/i, ''))}</a> โดย ${esc(c.author)} · ${c.licenseUrl ? `<a href="${esc(c.licenseUrl)}" target="_blank" rel="noopener">${esc(c.license)}</a>` : esc(c.license)}</li>`).join('');
 }
 
-// ---------- place picker ----------
-function openPicker() {
-  const dlg = $('placeDlg');
-  $('placeSearch').value = '';
-  fillList('');
-  dlg.showModal();
-  setTimeout(() => $('placeList').querySelector('.sel')?.scrollIntoView({ block: 'center' }), 30);
+// ---------- day detail ----------
+const SEVERITY = ['clear', 'mostly', 'partly', 'cloudy', 'overcast', 'fog', 'drizzle', 'rain', 'heavy', 'storm'];
+const PERIODS = [['ช่วงดึก', '00–06 น.', 0, 6], ['ช่วงเช้า', '06–12 น.', 6, 12], ['ช่วงบ่าย', '12–18 น.', 12, 18], ['ช่วงค่ำ', '18–24 น.', 18, 24]];
+const mm = v => v == null ? '–' : v < 0.05 ? '0' : v < 10 ? v.toFixed(1) : Math.round(v);
+function rainWord(sum) { return sum == null ? '' : sum < 0.1 ? 'ไม่มีฝน' : sum < 2 ? 'ฝนเล็กน้อย' : sum < 10 ? 'ฝนปานกลาง' : sum < 35 ? 'ฝนหนัก' : 'ฝนหนักมาก'; }
+function openDay(date) {
+  const d = (state.days || []).find(x => x.date === date);
+  if (!d) return;
+  const t0 = todayYMD();
+  const name = date === t0 ? 'วันนี้' : date === addDays(t0, 1) ? 'พรุ่งนี้' : 'วัน' + TH_DOW_LONG[dow(date)];
+  const h = state.model?.hourly;
+  const idx = h ? h.time.map((t, i) => t.startsWith(date) ? i : -1).filter(i => i >= 0) : [];
+  let html = `<div class="dd-head"><div><div class="dd-name">${name}</div><div class="dd-date">${dayNum(date)} ${monTh(date)} ${+date.slice(0, 4) + 543}</div></div>
+    <div class="dd-ic">${d.kind ? KINDS[d.kind][1] : ''}</div>
+    <div class="dd-tt"><span class="hi">${r0(d.max)}°</span><span class="lo">${r0(d.min)}°</span></div></div>
+    <div class="dd-desc">${esc(d.desc || (d.kind ? KINDS[d.kind][0] : ''))} ${srcBadge(d.src)}</div>`;
+  if (d.src === 'tmd') {
+    html += `<div class="dd-box tmd"><b>กรมอุตุนิยมวิทยา พยากรณ์จังหวัดเชียงใหม่</b><br>${esc(d.desc || '')}${d.tempDesc && d.tempDesc !== '-' ? ' · ' + esc(d.tempDesc) : ''}<br>
+      สูงสุด ${r0(d.max)}° ต่ำสุด ${r0(d.min)}° · ฝน ${r0(d.rainPct)}% ของพื้นที่${d.windKmh != null ? ` · ลม${compass(d.windDir)} ${r0(d.windKmh)} กม./ชม.` : ''}</div>`;
+  }
+  if (idx.length) {
+    const sum = idx.reduce((a, i) => a + (h.precipitation?.[i] || 0), 0);
+    html += tempChart(h, idx, date === t0 ? +hm(new Date()).slice(0, 2) : -1);
+    html += `<h3>ปริมาณฝนตามช่วงเวลา <small>รวมทั้งวัน ${mm(sum)} มม. · ${rainWord(sum)}</small></h3><div class="periods">`;
+    for (const [pn, pr, a, b] of PERIODS) {
+      const ii = idx.filter(i => { const hr = +h.time[i].slice(11, 13); return hr >= a && hr < b; });
+      if (!ii.length) continue;
+      const rain = ii.reduce((x, i) => x + (h.precipitation?.[i] || 0), 0);
+      const prob = Math.max(...ii.map(i => h.precipitation_probability?.[i] ?? 0));
+      const temps = ii.map(i => h.temperature_2m[i]);
+      const k = ii.map(i => kindFromCode(h.weather_code[i])).sort((x, y) => SEVERITY.indexOf(y) - SEVERITY.indexOf(x))[0];
+      const night = a === 0 || a === 18;
+      const icon = night && (k === 'clear' || k === 'mostly') ? '🌙' : KINDS[k][1];
+      html += `<div class="per"><div class="pn">${pn}<small>${pr}</small></div><div class="pi">${icon}</div>
+        <div class="pr"><b>${mm(rain)}</b> มม.</div><div class="pp">โอกาส ${prob}%</div><div class="pt">${r0(Math.min(...temps))}–${r0(Math.max(...temps))}°</div></div>`;
+    }
+    html += `</div><h3>รายชั่วโมง</h3><div class="hlist"><div class="hrow hh"><span>เวลา</span><span></span><span>อุณหภูมิ</span><span>ฝน</span><span>โอกาส</span><span>ความชื้น</span><span>ลม</span></div>`;
+    const nowH = date === t0 ? +hm(new Date()).slice(0, 2) : -1;
+    const maxR = Math.max(1, ...idx.map(i => h.precipitation?.[i] || 0));
+    for (const i of idx) {
+      const hr = +h.time[i].slice(11, 13);
+      const k = kindFromCode(h.weather_code[i]);
+      const icon = h.is_day && !h.is_day[i] && (k === 'clear' || k === 'mostly') ? '🌙' : KINDS[k][1];
+      const r = h.precipitation?.[i] || 0;
+      html += `<div class="hrow${hr < nowH ? ' past' : ''}${hr === nowH ? ' cur' : ''}"><span>${String(hr).padStart(2, '0')}:00</span><span>${icon}</span><span class="tc">${r0(h.temperature_2m[i])}°</span>
+        <span class="rr"><i style="width:${Math.round(100 * r / maxR)}%"></i><em>${mm(r)}</em></span><span>${h.precipitation_probability?.[i] ?? '–'}%</span><span>${r0(h.relative_humidity_2m?.[i])}%</span><span>${r0(h.wind_speed_10m?.[i])}</span></div>`;
+    }
+    html += `</div><p class="note">ฝนเป็นมิลลิเมตรต่อชั่วโมง ลมเป็น กม./ชม. ข้อมูลรายชั่วโมงมาจากแบบจำลอง Open-Meteo ณ ตำแหน่งของคุณ เพราะกรมอุตุฯ ไม่ได้เปิดข้อมูลรายชั่วโมงให้ใช้ฟรี</p>`;
+  } else if (d.src === 'clim') {
+    html += `<div class="dd-box">วันนี้ไกลเกินช่วงพยากรณ์ (16 วัน) ตัวเลขนี้เป็น<b>ค่าเฉลี่ยของวันเดียวกันใน 5 ปีที่ผ่านมา</b> ไม่ใช่พยากรณ์<br>
+      ฝนเฉลี่ย ${mm(d.rainMm)} มม. · มีฝนตก ${r0(d.rainPct)}% ของปีที่ผ่านมา</div>`;
+  } else {
+    html += '<p class="note">ยังไม่มีข้อมูลรายชั่วโมงสำหรับวันนี้</p>';
+  }
+  $('dayBody').innerHTML = html;
+  $('dayDlg').showModal();
+  $('dayBody').scrollTop = 0;
 }
-function fillList(q) {
-  const qq = q.trim().toLowerCase();
-  const items = PROVINCES.filter(([th, en]) => !qq || th.includes(qq) || en.toLowerCase().includes(qq));
-  $('placeList').innerHTML = items.map(([th, en]) =>
-    `<li><button type="button" data-th="${th}" data-en="${en}" class="${!state.gps && th === state.place.th ? 'sel' : ''}">${th}<small>${en}</small></button></li>`).join('');
+// Temperature through the day as a line, labelled every 3 hours.
+function tempChart(h, idx, nowH) {
+  const T = idx.map(i => h.temperature_2m[i]);
+  const lo = Math.floor(Math.min(...T)) - 1, hi = Math.ceil(Math.max(...T)) + 1;
+  const W = 600, H = 170, L = 24, R = 24, top = 30, bot = 30;
+  const x = k => L + (W - L - R) * k / Math.max(1, T.length - 1);
+  const y = v => top + (H - top - bot) * (hi - v) / Math.max(1, hi - lo);
+  const pts = T.map((v, k) => `${x(k).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const iMax = T.indexOf(Math.max(...T)), iMin = T.indexOf(Math.min(...T));
+  let g = `<polygon points="${x(0)},${H - bot} ${pts} ${x(T.length - 1)},${H - bot}" fill="url(#tg)"/><polyline points="${pts}" fill="none" stroke="#ffb36b" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
+  idx.forEach((i, k) => {
+    const hr = +h.time[i].slice(11, 13);
+    if (hr % 3 === 0) {
+      g += `<text x="${x(k)}" y="${H - 10}" text-anchor="middle" class="ax">${String(hr).padStart(2, '0')}</text>`;
+      g += `<circle cx="${x(k)}" cy="${y(T[k])}" r="3.5" fill="#fff"/><text x="${x(k)}" y="${y(T[k]) - 9}" text-anchor="middle" class="tv">${Math.round(T[k])}°</text>`;
+    }
+    if (hr === nowH) g += `<line x1="${x(k)}" x2="${x(k)}" y1="${top - 14}" y2="${H - bot}" stroke="#fff" stroke-dasharray="3 3" opacity=".7"/><text x="${x(k)}" y="${top - 16}" text-anchor="middle" class="ax">ตอนนี้</text>`;
+  });
+  return `<h3>อุณหภูมิตามเวลา <small>ร้อนสุด ${Math.round(T[iMax])}° ราว ${h.time[idx[iMax]].slice(11, 13)}:00 น. · เย็นสุด ${Math.round(T[iMin])}° ราว ${h.time[idx[iMin]].slice(11, 13)}:00 น.</small></h3>
+    <svg class="tchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="กราฟอุณหภูมิรายชั่วโมง"><defs><linearGradient id="tg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ffb36b" stop-opacity=".45"/><stop offset="1" stop-color="#ffb36b" stop-opacity="0"/></linearGradient></defs>${g}</svg>`;
 }
-function choose(place, gps = false) {
-  state.place = place;
-  state.gps = gps;
-  if (!gps) store.set('wx.place', { th: place.th, en: place.en });
-  bgKey = null;
-  $('placeDlg').close();
-  refresh();
+function bindDayClicks(el) {
+  el.addEventListener('click', e => { const t = e.target.closest('[data-date]'); if (t) openDay(t.dataset.date); });
+  el.addEventListener('keydown', e => { const t = e.target.closest('[data-date]'); if (t && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDay(t.dataset.date); } });
 }
-function useGps() {
-  if (!navigator.geolocation) return;
-  $('geoBtn').textContent = 'กำลังหาตำแหน่ง…';
-  navigator.geolocation.getCurrentPosition(pos => {
-    const { latitude: lat, longitude: lon } = pos.coords;
-    $('geoBtn').textContent = '📍 ใช้ตำแหน่งของฉัน';
-    const st = (state.tmd?.obs || []).filter(s => s.lat != null).sort((a, b) => dist(lat, lon, a.lat, a.lon) - dist(lat, lon, b.lat, b.lon))[0];
-    const prov = st ? PROVINCES.find(([th]) => norm(th) === norm(st.prov)) : null;
-    choose({ th: prov ? prov[0] : 'ตำแหน่งของฉัน', en: prov ? prov[1] : '', lat, lon }, true);
-  }, () => { $('geoBtn').textContent = 'เปิดสิทธิ์ตำแหน่งไม่ได้ ลองเลือกจังหวัดแทน'; }, { timeout: 12000, maximumAge: 6e5 });
+
+// ---------- splash ----------
+const splashStart = Date.now();
+function hideSplash() {
+  const sp = $('splash');
+  if (!sp || sp.classList.contains('out')) return;
+  setTimeout(() => { sp.classList.add('out'); setTimeout(() => sp.remove(), 700); }, Math.max(0, 1400 - (Date.now() - splashStart)));
 }
 
 // ---------- tabs ----------
@@ -613,21 +686,20 @@ function setTab(t) {
 
 // ---------- init ----------
 function init() {
-  $('placeBtn').addEventListener('click', openPicker);
-  $('placeSearch').addEventListener('input', e => fillList(e.target.value));
-  $('placeList').addEventListener('click', e => {
-    const b = e.target.closest('button[data-th]');
-    if (b) choose({ th: b.dataset.th, en: b.dataset.en });
-  });
-  $('geoBtn').addEventListener('click', useGps);
+  $('placeBtn').addEventListener('click', () => { bgKey = null; refresh(); });
   $('tabWeek').addEventListener('click', () => setTab('week'));
   $('tabMonth').addEventListener('click', () => setTab('month'));
   setTab(state.tab);
-  $('placeName').textContent = state.place.th;
+  bindDayClicks($('week'));
+  bindDayClicks($('cal'));
+  $('dayClose').addEventListener('click', () => $('dayDlg').close());
+  $('dayDlg').addEventListener('click', e => { if (e.target === $('dayDlg')) $('dayDlg').close(); });
+  setTimeout(hideSplash, 12000);
+  $('placeName').textContent = state.loc ? state.loc.label : 'กำลังหาตำแหน่ง…';
   fetch('img/credits.json').then(r => r.json()).then(c => { credits = c; renderCredits(); }).catch(() => {});
   refresh();
   setInterval(refresh, REFRESH_MS);
-  setInterval(() => { if (state.updated && !busy) { const m = Math.round((Date.now() - state.updated) / 6e4); setLive('ok', m < 1 ? 'อัปเดตเมื่อสักครู่' : `อัปเดต ${m} นาทีที่แล้ว`); } }, 30000);
+  setInterval(() => { if (state.updated && !busy) { const m = Math.round((Date.now() - state.updated) / 6e4); setLive('ok', m < 1 ? 'เมื่อสักครู่' : `${m} นาทีก่อน`); } }, 30000);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && state.updated && Date.now() - state.updated > 5 * 6e4) refresh();
   });
