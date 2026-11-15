@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ฟ้าวันนี้ · พยากรณ์อากาศ</title>
-<meta name="description" content="พยากรณ์อากาศไทย ข้อมูลกรมอุตุนิยมวิทยา อุณหภูมิตัวใหญ่ รายสัปดาห์และรายเดือน อัปเดตอัตโนมัติ">
+<meta name="description" content="พยากรณ์อากาศเชียงใหม่ตามตำแหน่งที่อยู่ ข้อมูลกรมอุตุนิยมวิทยา อุณหภูมิตัวใหญ่ รายสัปดาห์และรายเดือน อัปเดตอัตโนมัติ">
 <meta name="theme-color" content="#1d3b5c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -16,22 +16,32 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="weather.css?v=1">
+<link rel="stylesheet" href="weather.css?v=3">
 </head>
 <body>
+<div id="splash" class="splash" role="status">
+  <div class="sp-in">
+    <div class="sp-title">ฟ้าวันนี้</div>
+    <div class="sp-sub">พยากรณ์อากาศเชียงใหม่</div>
+    <div class="spinner" aria-hidden="true"></div>
+    <div class="sp-msg">กำลังหาตำแหน่งและโหลดข้อมูลกรมอุตุฯ…</div>
+  </div>
+  <div class="sp-cr">ภาพ: Chiang Mai City Sky View โดย Seashell (Wikimedia Commons, FAL)</div>
+</div>
 <div id="bg" class="bg" aria-hidden="true"></div>
 <div id="bg2" class="bg" aria-hidden="true"></div>
 <div class="shade" aria-hidden="true"></div>
 
 <main class="wrap">
   <header class="top">
-    <button id="placeBtn" class="place" type="button" aria-haspopup="dialog">
-      <span class="pin">📍</span><span id="placeName">กำลังโหลด…</span><span class="caret">▾</span>
+    <button id="placeBtn" class="place" type="button" title="แตะเพื่อหาตำแหน่งใหม่">
+      <span class="pin">📍</span><span id="placeName">เชียงใหม่</span><span class="caret">⟳</span>
     </button>
     <div class="live" id="live" title="อัปเดตอัตโนมัติทุก 10 นาที">
       <i class="dot"></i><span id="liveText">กำลังโหลด</span>
     </div>
   </header>
+  <p id="locNote" class="locnote" hidden></p>
 
   <section class="hero" aria-live="polite">
     <div class="now-label" id="nowLabel">ตอนนี้</div>
@@ -46,7 +56,7 @@
   <section class="tiles" id="tiles" aria-label="รายละเอียด"></section>
 
   <section class="card">
-    <h2>รายชั่วโมง <small>24 ชม. ข้างหน้า</small></h2>
+    <h2>รายชั่วโมง <small>24 ชม. ข้างหน้า · กดวันด้านล่างเพื่อดูรายละเอียด</small></h2>
     <div class="hours" id="hours"></div>
   </section>
 
@@ -82,16 +92,12 @@
   </footer>
 </main>
 
-<dialog id="placeDlg" class="dlg">
-  <form method="dialog">
-    <h2>เลือกจังหวัด</h2>
-    <button id="geoBtn" class="geo" type="button">📍 ใช้ตำแหน่งของฉัน</button>
-    <input id="placeSearch" type="search" placeholder="ค้นหาจังหวัด" autocomplete="off">
-    <ul id="placeList" class="plist"></ul>
-    <button class="close" value="cancel">ปิด</button>
-  </form>
+<dialog id="dayDlg" class="dlg day-dlg" aria-label="รายละเอียดรายวัน">
+  <button id="dayClose" class="x" type="button" aria-label="ปิด">✕</button>
+  <div id="dayBody" class="day-body"></div>
 </dialog>
 
-<script src="app.js?v=1"></script>
+
+<script src="app.js?v=3"></script>
 </body>
 </html>
