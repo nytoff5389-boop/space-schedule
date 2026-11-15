@@ -28,6 +28,13 @@ for (const [name, url] of Object.entries(FEEDS)) {
       status.feeds[name] = { ok: true, bytes: text.length };
       ok = true;
       console.log(`${name}: ${text.length} bytes`);
+      // Short excerpt in the log, so the feed format can be checked without a browser.
+      const dec = t => t.replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)));
+      const build = text.match(/<LastBuildDate>([^<]*)/i)?.[1];
+      const cm = text.indexOf('CHIANG MAI') >= 0 ? text.indexOf('CHIANG MAI') : text.indexOf('Chiang Mai');
+      console.log(`  LastBuildDate: ${build}`);
+      console.log('  head: ' + dec(text.slice(0, name === 'warning' ? 1500 : 400)).replace(/\s+/g, ' '));
+      if (cm >= 0) console.log('  chiang mai: ' + dec(text.slice(Math.max(0, cm - 300), cm + 1200)).replace(/\s+/g, ' '));
     } catch (e) {
       console.log(`${name}: attempt ${attempt} failed: ${e.message}`);
       status.feeds[name] = { ok: false, error: String(e.message) };
