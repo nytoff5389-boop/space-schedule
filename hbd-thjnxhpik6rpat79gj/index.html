@@ -141,6 +141,15 @@ img{-webkit-user-drag:none;user-select:none;pointer-events:none}
 .stack .coverface .t{font-size:38px}
 .stack .coverface img.k{width:150px}
 @media (prefers-reduced-motion:reduce){.deco{animation:none}}
+
+/* tap paw prints + button press */
+.paw{position:fixed;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;pointer-events:none;z-index:9999;
+ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cg fill='%23e0559b' stroke='%23fff' stroke-width='3'%3E%3Cellipse cx='32' cy='42' rx='15' ry='12.5'/%3E%3Cellipse cx='13' cy='26' rx='6.5' ry='8.5' transform='rotate(-20 13 26)'/%3E%3Cellipse cx='25' cy='15' rx='6.5' ry='8.5' transform='rotate(-6 25 15)'/%3E%3Cellipse cx='39' cy='15' rx='6.5' ry='8.5' transform='rotate(6 39 15)'/%3E%3Cellipse cx='51' cy='26' rx='6.5' ry='8.5' transform='rotate(20 51 26)'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;
+ animation:pawpop .9s ease-out forwards;will-change:transform,opacity}
+.paw.s{width:20px;height:20px;margin:-10px 0 0 -10px;animation-duration:.8s}
+@keyframes pawpop{0%{opacity:0;scale:.3}18%{opacity:1;scale:1.15}35%{scale:1}70%{opacity:1}100%{opacity:0;scale:.9;translate:0 -14px}}
+.press{animation:press .42s cubic-bezier(.3,1.6,.5,1)}
+@keyframes press{0%{scale:1}30%{scale:.86}65%{scale:1.08}100%{scale:1}}
 </style>
 
 </head>
@@ -384,6 +393,23 @@ function confetti(){
     document.body.appendChild(c);setTimeout(()=>c.remove(),8500);
   }
 }
+</script>
+
+<script>
+(function(){
+  function paw(x,y,cls,rot,delay){const p=document.createElement('div');p.className='paw'+(cls?' '+cls:'');
+    p.style.left=x+'px';p.style.top=y+'px';p.style.rotate=rot+'deg';if(delay)p.style.animationDelay=delay+'ms';
+    document.body.appendChild(p);setTimeout(()=>p.remove(),1000+(delay||0));}
+  document.addEventListener('pointerdown',e=>{
+    const r=(Math.random()*50-25);paw(e.clientX,e.clientY,'',r,0);
+    const a=(r-90)*Math.PI/180;
+    paw(e.clientX+Math.cos(a+.5)*34,e.clientY+Math.sin(a+.5)*34,'s',r,120);
+    paw(e.clientX+Math.cos(a-.5)*30+12,e.clientY+Math.sin(a-.5)*30-14,'s',r,220);
+    const b=e.target.closest&&e.target.closest('button,.coverface');
+    if(b){b.classList.remove('press');void b.offsetWidth;b.classList.add('press');}
+  },{passive:true,capture:true});
+  document.addEventListener('animationend',e=>{if(e.animationName==='press')e.target.classList.remove('press')},true);
+})();
 </script>
 </body>
 </html>
