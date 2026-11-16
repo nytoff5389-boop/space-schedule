@@ -39,3 +39,9 @@ A separate weather page at `/weather/`. Data:
 - Thai Meteorological Department open data (public example key): station observations every 3 h, today's max/min, 7-day province forecast, warnings. The browser tries `data.tmd.go.th` directly; if blocked, it reads the copy that `weather/fetch-tmd.mjs` saves during the hourly Pages deploy (`pages.yml` schedule).
 - Open-Meteo (labelled on the page): model "now" between TMD reports, hourly, days 8–16, and 5-year averages for days 17–30.
 - Background photos: Wikimedia Commons, credits in `weather/img/credits.json` and on the page.
+
+## แปลสด ไทย ⇄ อังกฤษ (`translate/`)
+เว็บ: https://nytoff5389-boop.github.io/space-schedule/translate/ — เว็บแยก อยู่ใน repo เดียวกัน
+- แตะปุ่มเดียวเพื่อฟัง คำแปลขึ้นทันทีขณะพูด (อังกฤษ→ไทยเป็นค่าเริ่มต้น สลับเป็นไทย→อังกฤษได้)
+- ฟรี ไม่ต้องใช้รหัส: ใช้ตัวฟังเสียงของเครื่อง (Web Speech API) + Google แปล ต้องต่ออินเทอร์เน็ต
+- เพิ่มลงหน้าจอโฮมของ iPhone/iPad ได้ (Safari → แชร์ → เพิ่มไปยังหน้าจอโฮม)
