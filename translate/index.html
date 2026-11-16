@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>แปลสด · ไทย ⇄ อังกฤษ</title>
+<meta name="description" content="แตะปุ่มเดียว ฟังเสียงพูดแล้วแปลอังกฤษ⇄ไทยแบบสดๆ ทีละคำ">
+<meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14171c" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="แปลสด">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <img src="icon.svg" alt="" width="30" height="30">
+      <span>แปลสด</span>
+    </div>
+  </header>
+
+  <nav class="dirs" id="dirs" role="radiogroup" aria-label="ทิศทางการแปล">
+    <button type="button" role="radio" data-dir="en-th" aria-checked="true">
+      <b>อังกฤษ</b><i>→</i><b>ไทย</b>
+    </button>
+    <button type="button" role="radio" data-dir="th-en" aria-checked="false">
+      <b>ไทย</b><i>→</i><b>อังกฤษ</b>
+    </button>
+  </nav>
+
+  <main class="feed" id="feed" aria-live="polite">
+    <div class="empty" id="empty">
+      <div class="empty-art" aria-hidden="true">
+        <span>Hello</span><span>สวัสดี</span>
+      </div>
+      <p class="empty-title">แตะปุ่มด้านล่าง แล้วให้อีกคนพูด</p>
+      <p class="empty-sub" id="emptySub">คำแปลภาษาไทยจะขึ้นตรงนี้ทันทีขณะที่เขาพูด</p>
+    </div>
+  </main>
+
+  <footer class="dock">
+    <div class="status" id="status" role="status"></div>
+    <button class="mic" id="mic" type="button" aria-pressed="false">
+      <span class="ring" aria-hidden="true"></span>
+      <svg class="ic-mic" viewBox="0 0 24 24" width="38" height="38" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>
+      <svg class="ic-stop" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>
+    </button>
+    <div class="mic-label" id="micLabel">แตะเพื่อฟัง</div>
+    <div class="tools">
+      <button type="button" class="chip" id="speakToggle" aria-pressed="false" title="อ่านคำแปลออกเสียง">🔈 อ่านออกเสียง</button>
+      <button type="button" class="chip" id="bigToggle" aria-pressed="false" title="ตัวหนังสือใหญ่">Aa ตัวใหญ่</button>
+      <button type="button" class="chip" id="clearBtn">ล้าง</button>
+    </div>
+  </footer>
+</div>
+
+<script src="app.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#e2553c"/>
+  <path d="M86 128a40 40 0 0 1 40-40h180a40 40 0 0 1 40 40v110a40 40 0 0 1-40 40H176l-58 50v-50a40 40 0 0 1-32-40z" fill="#fffdf8"/>
+  <path d="M426 254a40 40 0 0 0-40-40H226a40 40 0 0 0-40 40v104a40 40 0 0 0 40 40h112l58 50v-50a40 40 0 0 0 30-40z" fill="#1d2128"/>
+  <text x="216" y="232" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="120" fill="#1d2128" text-anchor="middle">Aa</text>
+  <text x="306" y="360" font-family="Tahoma, 'Noto Sans Thai', sans-serif" font-weight="700" font-size="118" fill="#fffdf8" text-anchor="middle">ก</text>
+</svg>
