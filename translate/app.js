@@ -36,7 +36,7 @@
     try {
       const u = 'https://translate.googleapis.com/translate_a/single?client=gtx&dt=t'
         + '&sl=' + src + '&tl=' + tgt + '&q=' + encodeURIComponent(text);
-      const r = await fetch(u);
+      const r = await fetch(u, { signal: AbortSignal.timeout ? AbortSignal.timeout(4000) : undefined });
       if (!r.ok) throw new Error(r.status);
       const j = await r.json();
       out = (j[0] || []).map((p) => p[0] || '').join('');
@@ -88,7 +88,7 @@
     scrollDown();
   }
   function saveHistory() {
-    if (history.length > 150) history = history.slice(-150);
+    if (history.length > 400) history = history.slice(-400);
     store.set('history', history);
   }
 
@@ -141,10 +141,10 @@
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   let rec = null;
   let listening = false;     // what the user wants
-  let finalsSeen = 0;        // final results already committed in the current session
+  let full = '', donePrefix = ''; // session transcript, and the part already committed
   let interim = '';
   let silenceTimer = null, restartTimer = null;
-  let liveSeq = 0, liveBusy = false, liveQueued = false, liveTr = '', liveFor = '';
+  let liveSeq = 0, liveShown = 0, liveFlying = 0, liveAsked = '', liveTr = '', liveFor = '';
   let wakeLock = null;
   let flushing = false;     // true between our own forced cut and the next session
 
@@ -155,7 +155,7 @@
     const item = { or: text, tr: '', dir, t: Date.now() };
     history.push(item);
     // reuse the live translation for an instant first paint, then refine
-    if (liveFor && text.startsWith(liveFor.trim())) item.tr = liveTr;
+    if (liveTr) item.tr = liveTr;
     const el = makeLine(item);
     if (liveEl) feed.insertBefore(el, liveEl); else feed.appendChild(el);
     updateEmpty();
@@ -168,63 +168,73 @@
     });
   }
 
-  // translate what is being said right now, at most one request in flight
+  // translate what is being said right now: newest request wins, a slow one never blocks the next
   function pumpLive() {
-    if (liveBusy) { liveQueued = true; return; }
     const text = interim.trim();
-    if (!text) return;
+    if (!text || text === liveAsked || liveFlying >= 3) return;
+    liveAsked = text;
     const d = DIRS[dir];
     const seq = ++liveSeq;
-    liveBusy = true;
+    liveFlying++;
     translate(text, d.src, d.tgt).then((tr) => {
-      liveBusy = false;
-      if (seq === liveSeq && interim.trim()) {
+      liveFlying--;
+      if (tr && seq > liveShown && interim.trim()) {
+        liveShown = seq;
         liveTr = tr; liveFor = text;
-        showLive(interim, tr, interim.trim() !== text);
+        showLive(interim, tr, true);
       }
-      if (liveQueued) { liveQueued = false; pumpLive(); }
+      pumpLive(); // catch up with words that arrived meanwhile
     });
   }
 
+  // Everything heard in this session as one string. Works the same whether the
+  // engine marks pieces final early, late, or never (iOS Safari differs from Chrome).
   function onResult(e) {
     if (speaking || flushing) return; // skip our own voice and words already committed
-    let newInterim = '';
+    let all = '', allFinal = e.results.length > 0;
     for (let i = 0; i < e.results.length; i++) {
-      const r = e.results[i];
-      if (r.isFinal) {
-        if (i >= finalsSeen) { commit(r[0].transcript); finalsSeen = i + 1; }
-      } else {
-        newInterim += r[0].transcript;
-      }
+      all += e.results[i][0].transcript;
+      if (!e.results[i].isFinal) allFinal = false;
     }
-    if (newInterim.trim() !== interim.trim()) {
-      interim = newInterim;
+    if (!all.startsWith(donePrefix)) {
+      donePrefix = all.length < donePrefix.length ? '' : all.slice(0, donePrefix.length);
+    }
+    full = all;
+    const next = full.slice(donePrefix.length);
+    if (next.trim() !== interim.trim()) {
+      interim = next;
       if (interim.trim()) {
-        showLive(interim, liveTr && interim.startsWith(liveFor.trim()) ? liveTr : '', true);
+        showLive(interim, liveTr, true);
         pumpLive();
       } else {
-        liveTr = ''; liveFor = '';
         dropLive();
       }
     }
-    // If the speaker pauses but the engine has not closed the sentence, close it ourselves.
+    // Close the sentence when the speaker pauses, the engine says it is done, or it gets long.
     clearTimeout(silenceTimer);
     if (interim.trim()) {
-      const long = interim.length > 240;
-      silenceTimer = setTimeout(forceFinal, long ? 0 : 1400);
+      if (interim.length > 150) {
+        // lecture: speaker does not pause, so cut at the last sentence end or word gap
+        const head = interim.slice(0, 150);
+        let cut = Math.max(head.lastIndexOf('. '), head.lastIndexOf('? '), head.lastIndexOf('! '), head.lastIndexOf(', '));
+        if (cut < 60) cut = head.lastIndexOf(' ');
+        forceFinal(cut > 40 ? cut + 1 : interim.length);
+      } else silenceTimer = setTimeout(forceFinal, allFinal ? 350 : 900);
     }
   }
 
-  function forceFinal() {
+  function forceFinal(upTo) {
+    clearTimeout(silenceTimer);
     if (!interim.trim()) return;
-    const text = interim;
-    interim = '';
-    dropLive();
+    const n = typeof upTo === 'number' ? upTo : interim.length;
+    const text = interim.slice(0, n);
+    donePrefix += text;
+    interim = interim.slice(n);
     commit(text);
-    liveTr = ''; liveFor = '';
-    // restart the session so the committed words are not repeated
-    flushing = true;
-    if (rec) { try { rec.abort(); } catch {} }
+    liveTr = ''; liveFor = ''; liveAsked = '';
+    liveShown = liveSeq; // ignore answers still on the way for the old words
+    if (interim.trim()) { showLive(interim, '', true); pumpLive(); silenceTimer = setTimeout(forceFinal, 900); }
+    else dropLive();
   }
 
   function startSession() {
@@ -235,7 +245,7 @@
     rec.continuous = true;
     rec.interimResults = true;
     rec.maxAlternatives = 1;
-    finalsSeen = 0;
+    full = ''; donePrefix = '';
     interim = '';
     flushing = false;
     rec.onresult = onResult;
@@ -261,7 +271,8 @@
     };
     rec.onend = () => {
       // commit anything left hanging, then keep listening until the user taps stop
-      if (interim.trim()) { const t = interim; interim = ''; dropLive(); commit(t); }
+      forceFinal();
+      full = ''; donePrefix = '';
       rec = null;
       if (listening) restartTimer = setTimeout(startSession, 120);
     };
