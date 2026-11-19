@@ -76,6 +76,14 @@ export function weekOfTerm(data, ds) {
   return n < 0 ? 0 : Math.floor(n / 7) + 1;
 }
 
+/** Medicine schedule items that apply on a given day. */
+export function medsOn(data, ds) {
+  const m = data.meds; if (!m || !m.items) return [];
+  if (m.start && ds < m.start) return [];
+  if (m.end && ds > m.end) return [];
+  return m.items;
+}
+
 /** One-line quiz status for a lab class. */
 export function quizLine(c) {
   if (!c.isLab) return '';
@@ -262,6 +270,11 @@ export function buildNotifications(data, ds) {
     title: `📋 วันนี้ส่งงาน${t.code ? ' ' + t.code : ''}`,
     message: `${t.title}${t.time ? `\nก่อน ${fmtTime(t.time)} น.` : ''}${t.how ? `\nวิธีส่ง: ${t.how}` : ''}`,
     priority: 5,
+  }));
+  // Daily medicine schedule (every day, incl. weekends and holidays)
+  medsOn(data, ds).forEach((m) => push(ds, m.time, {
+    title: `💊 ${fmtTime(m.time)} ${m.title}`,
+    message: [m.detail, m.warn].filter(Boolean).join('\n') || 'ถึงเวลาแล้ว', priority: 5,
   }));
   // Special day (e.g. birthday): one heads-up a week before
   if (data.special) {

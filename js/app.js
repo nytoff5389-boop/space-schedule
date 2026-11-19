@@ -1,6 +1,6 @@
 import {
   TH_DAYS, TH_DAYS_SHORT, TH_MONTHS, addDays, dow, diffDays, toMin, fmtTime, bkkNow, thaiDate,
-  dayInfo, nextClassDay, bkkEpoch, examsOn, holidaysOn, eventsOn, buildNotifications, toDS, parseDS, termPhase,
+  dayInfo, medsOn, nextClassDay, bkkEpoch, examsOn, holidaysOn, eventsOn, buildNotifications, toDS, parseDS, termPhase,
 } from './core.js';
 import { sfx } from './sfx.js';
 import { warpJump } from './space.js';
@@ -221,6 +221,22 @@ async function queueMyTaskAlerts() {
   } catch (e) { console.warn('task alerts', e); }
 }
 
+// ---------- MEDICINE ----------
+function medsSection(ds) {
+  const items = medsOn(data, ds); if (!items.length) return '';
+  const done = new Set(LS.get('meds-' + ds, []));
+  const isToday = ds === state.today, now = bkkNow().minutes;
+  const next = isToday ? items.find((m) => !done.has(m.id) && toMin(m.end || m.time) >= now) : null;
+  return `<div class="section-title">💊 ตารางกินยา ${done.size}/${items.length}</div><div class="meds">${items.map((m) => {
+    const d = done.has(m.id), late = isToday && !d && toMin(m.end || m.time) + 30 < now;
+    return `<div class="med${d ? ' done' : ''}${m === next ? ' next' : ''}${late ? ' late' : ''}">
+      <div class="med-time"><b>${fmtTime(m.time)}</b>${m.end ? `<span>–${fmtTime(m.end)}</span>` : ''}</div>
+      <div class="med-body"><div class="med-title">${m.emoji || '💊'} ${esc(m.title)}${m === next ? ' <span class="task-badge soon">ถัดไป</span>' : ''}</div>
+        ${m.detail ? `<div class="med-detail">${esc(m.detail)}</div>` : ''}${m.warn ? `<div class="med-warn">⚠️ ${esc(m.warn)}</div>` : ''}</div>
+      <button class="task-check" data-act="med" data-id="${esc(m.id)}" data-date="${ds}" aria-label="${d ? 'ยังไม่กิน' : 'กินแล้ว'}">${d ? '✓' : ''}</button></div>`;
+  }).join('')}</div>`;
+}
+
 function renderToday() {
   const ds = state.date;
   const info = dayInfo(data, ds);
@@ -245,6 +261,7 @@ function renderToday() {
   if (info.cancelled.length) html += `<div class="section-title">งดเรียน</div><div class="list">${info.cancelled.map((k) => `<div class="item cancel"><div class="date-chip"><b style="font-size:18px">🚫</b><span>${fmtTime(k.start)}</span></div><div><div class="t" style="color:${k.course.color}">${esc(k.code)} ${esc(k.course.name)}</div><div class="s">${esc(k.note || 'งดเรียนวันนี้')}</div></div></div>`).join('')}</div>`;
   if (info.exams.length) html += `<div class="section-title">สอบ</div><div class="list">${examItems(info.exams)}</div>`;
   if (info.events.length) html += `<div class="section-title">กิจกรรม / วันสำคัญ</div><div class="list">${eventItems(info.events)}</div>`;
+  html += medsSection(ds);
   if (isToday) html += tasksSection();
   else {
     const dueHere = allTasks().filter((t) => t.due === ds);
@@ -545,6 +562,10 @@ view.addEventListener('click', async (e) => {
     const r = b.getBoundingClientRect(); go('course', r.left + r.width / 2, r.top + r.height / 2); scrollTo(0, 0);
   } else if (act === 'back') {
     sfx.blip(-1); go(state.prevView || 'today', innerWidth / 2, 80);
+  } else if (act === 'med') {
+    const k = 'meds-' + b.dataset.date, s = new Set(LS.get(k, []));
+    if (s.has(b.dataset.id)) { s.delete(b.dataset.id); sfx.blip(-1); } else { s.add(b.dataset.id); sfx.chime(); }
+    LS.set(k, [...s]); render(false);
   } else if (act === 'totasks') {
     sfx.tap(); const el = $('#tasksTop'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } else if (act === 'taskdone') {

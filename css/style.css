@@ -423,3 +423,17 @@ details.task-done .tasks { margin-top: 10px; }
 .cd-grades span { text-align: center; padding: 6px 2px; border-radius: 10px; background: rgba(255,255,255,.05); border: 1px solid var(--line); font-size: 12px; color: var(--muted); }
 .cd-grades b { display: block; font-size: 17px; color: var(--text); font-family: 'Orbitron', sans-serif; }
 .cd-calc { border-color: rgba(103,232,249,.4); }
+/* Medicine schedule */
+.meds { display: grid; gap: 8px; }
+.med { display: grid; grid-template-columns: 62px 1fr 52px; gap: 10px; align-items: center; padding: 12px; border-radius: 18px; background: var(--panel-strong); border: 1px solid var(--line); }
+.med.next { border-color: rgba(103,232,249,.7); box-shadow: 0 0 20px rgba(103,232,249,.18); }
+.med.late { border-color: rgba(251,113,133,.6); }
+.med.done { opacity: .5; }
+.med.done .med-title { text-decoration: line-through; }
+.med.done .task-check { background: var(--green); border-color: transparent; }
+.med-time { text-align: center; }
+.med-time b { display: block; font-family: 'Orbitron', sans-serif; font-size: 17px; color: var(--cyan); }
+.med-time span { font-size: 12px; color: var(--muted); }
+.med-title { font-family: 'Prompt', 'IBM Plex Sans Thai Looped', sans-serif; font-weight: 600; line-height: 1.35; }
+.med-detail { font-size: 13.5px; color: var(--text); margin-top: 3px; line-height: 1.4; }
+.med-warn { font-size: 12.5px; color: var(--amber); margin-top: 3px; line-height: 1.4; }
