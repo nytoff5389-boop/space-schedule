@@ -225,3 +225,16 @@ a { color: #cfe8ff; }
 .tchart { width: 100%; height: auto; display: block; background: rgba(255,255,255,.05); border-radius: 14px; }
 .tchart .ax { font-size: 15px; fill: rgba(255,255,255,.7); font-family: inherit; }
 .tchart .tv { font-size: 17px; fill: #fff; font-weight: 600; font-family: inherit; }
+
+/* area picker */
+.geo.sel { outline: 2px solid #fff; }
+.plist .amp-h { display: flex; align-items: center; gap: 6px; font-weight: 500; }
+.plist .amp-h small { margin-left: 0; }
+.plist .chev { margin-left: auto; transition: transform .2s; color: var(--muted); font-size: 20px; }
+.plist .amp.open .chev { transform: rotate(90deg); }
+.plist .amp ul { display: none; list-style: none; margin: 0; padding: 0 0 6px 14px; }
+.plist .amp.open ul { display: block; }
+.plist .amp ul button { font-size: 15px; padding: 8px; }
+.plist button.sel { background: rgba(61,139,253,.35); }
+.plist .empty { padding: 12px 8px; color: var(--muted); }
+#areaDlg form { height: min(80vh, 640px); }
