@@ -81,6 +81,19 @@ img{-webkit-user-drag:none;user-select:none;pointer-events:none}
 .qcard .q{margin:10px 0 16px;font-size:24px;line-height:1.5;color:#e0559b;min-height:1.4em;white-space:nowrap}
 .qcard .q.yes{font-size:21px}
 .qcard .btns{display:flex;justify-content:center;align-items:center;gap:12px;min-height:84px}
+.qcard .go{margin-top:6px}
+.qcard .go:not(.show){display:none}
+/* iPad / landscape: big side-by-side question card */
+#ask.wide .qcard{width:600px;display:grid;grid-template-columns:250px 1fr;grid-template-rows:1fr auto 1fr;column-gap:14px;padding:26px 22px;align-items:center}
+#ask.wide .qcard .pic{grid-row:1/4;width:250px;height:250px}
+#ask.wide .qcard .q{grid-column:2;grid-row:2;margin:0 0 14px;font-size:27px}
+#ask.wide .qcard .q.yes{font-size:22px}
+#ask.wide .qcard .q{align-self:end}
+#ask.wide .qcard .btns,#ask.wide .qcard .go{grid-column:2;grid-row:3;align-self:start;justify-self:center}
+#ask.wide .love{font-size:24px;padding:13px 30px}
+#ask.wide .no{font-size:22px;padding:12px 28px}
+.deco.wx{display:none}
+#ask.wide .deco.wx,.scene.wide .deco.wx{display:block}
 .btn{font-family:inherit;font-weight:700;border:none;border-radius:999px;cursor:pointer;color:#fff;letter-spacing:1px;transition:transform .25s,font-size .25s,padding .25s;-webkit-appearance:none;white-space:nowrap}
 .love{background:linear-gradient(180deg,#b78cff,#9a6af2);box-shadow:0 5px 0 #7a4fd0;font-size:20px;padding:10px 22px}
 .no{background:linear-gradient(180deg,#ff8db3,#f2638f);box-shadow:0 5px 0 #cc4670;font-size:18px;padding:9px 20px}
@@ -179,7 +192,7 @@ img{-webkit-user-drag:none;user-select:none;pointer-events:none}
 
 <!-- 3. do you love me -->
 <section id="ask" class="scene">
-  <div class="mid fit" data-w="340" data-h="600">
+  <div class="mid fit" id="askfit" data-w="340" data-h="520">
   <div class="qcard" id="qcard">
     <div class="pic"><img id="qimg" src="a/q0.webp" alt=""></div>
     <div class="q" id="qtext">บีอารักเค้ามั้ยยยยย</div>
@@ -187,8 +200,8 @@ img{-webkit-user-drag:none;user-select:none;pointer-events:none}
       <button class="btn love" id="bLove">LOVE</button>
       <button class="btn no" id="bNo">NO</button>
     </div>
+    <button class="go" id="askNext"><img src="a/e-sparkling_heart.webp" alt="">ไปกันต่อ</button>
   </div>
-  <button class="go" id="askNext"><img src="a/e-sparkling_heart.webp" alt="">ไปกันต่อ</button>
   </div>
 </section>
 
@@ -251,10 +264,17 @@ const DECO = {
     ['d-strawberry',84,68,17,0],['e-shortcake',4,70,11,0]
   ]
 };
+// extra stickers only shown on wide (iPad landscape) screens, filling the gaps between the corners
+const DECO_WIDE = {
+  load: [['d-love',12,36,15,-6],['s139',22,62,12,6],['d-wha',74,74,14,0],['s123',88,78,11,-8],['d-giggle',58,2,13,0],['s140',46,22,9,8],['d-thanks',12,6,12,6],['s156',80,40,11,0],['e-ribbon',30,70,6,0],['e-sparkling_heart',66,62,6,0]],
+  env:  [['d-love',13,40,15,-6],['s136',24,64,12,6],['d-hearts',76,40,14,0],['s152',88,6,11,8],['d-sit',56,4,13,0],['s154',18,4,11,-6],['d-melody',86,78,13,0],['s146',48,86,11,0],['e-two_hearts',30,30,6,0],['e-pink_heart',66,74,6,0]],
+  ask:  [['d-love',13,40,16,-6],['s148',22,64,12,6],['d-cupid',76,30,13,0],['d-wha',14,6,12,8],['s133',56,4,11,0],['d-sit',88,58,12,0],['s145',22,90,11,-6],['d-night',48,88,13,0],['s151',80,90,10,6],['d-friend',90,6,11,0],['s139',4,54,11,0],['e-two_hearts',30,26,6,0],['e-ribbon',68,22,6,8],['e-purple_heart',70,82,6,0],['e-sparkling_heart',28,78,6,0]],
+  card: [['d-hey',14,18,12,-6],['s146',8,44,10,6],['d-love',88,42,11,0],['s151',54,4,9,0],['s123',72,84,10,0],['e-sparkles',30,6,6,0]]
+};
 function decorate(id){
   const sc=document.getElementById(id);
-  DECO[id].forEach(([n,x,y,s,r],i)=>{
-    const d=document.createElement('div');d.className='deco';
+  DECO[id].concat((DECO_WIDE[id]||[]).map(d=>d.concat('wx'))).forEach(([n,x,y,s,r,cls],i)=>{
+    const d=document.createElement('div');d.className='deco'+(cls?' '+cls:'');
     d.style.cssText=`left:${x}%;top:${y}%;width:min(${s}vmin,${Math.round(s*6.2)}px);--r:${r}deg;animation-delay:${(i%5)*-.6}s;animation-duration:${2.6+(i%4)*.5}s`;
     d.innerHTML=`<img src="${A(n)}" alt="">`;sc.appendChild(d);
   });
@@ -275,8 +295,10 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&song.curr
 function fitAll(){
   const W=innerWidth,H=innerHeight;
   const stack=W/H<0.6;document.getElementById('card').classList.toggle('stack',stack);
+  const wide=W/H>1.15&&Math.min(W,H)>=600;document.querySelectorAll('.scene').forEach(s=>s.classList.toggle('wide',wide));
   document.querySelectorAll('.fit').forEach(el=>{
     let dw=+el.dataset.w,dh=+el.dataset.h;
+    if(el.id==='askfit'&&$('#ask').classList.contains('wide')){dw=640;dh=380;}
     if(el.id==='stage'){ if(stack){dw=360;dh=690;} else {dw=760;dh=490;} }
     const z=Math.max(.55,Math.min(2.3,Math.min(W*0.94/dw,H*0.9/dh)));
     el.style.zoom=z;
@@ -291,7 +313,7 @@ function go(from,to){$('#'+from).classList.remove('on');$('#'+to).classList.add(
   const fill=$('#fill');
   for(let i=0;i<22;i++){const h=document.createElement('img');h.src=A(i%3==2?'e-purple_heart':'e-pink_heart');fill.appendChild(h)}
   // preload every image while the bar fills
-  const all=new Set();Object.values(DECO).flat().forEach(d=>all.add(A(d[0])));
+  const all=new Set();Object.values(DECO).concat(Object.values(DECO_WIDE)).flat().forEach(d=>all.add(A(d[0])));
   ['q1','q2','q3','q4','q5','yes','yes2','envelope-opened'].concat(FLOWERS_LIST()).forEach(n=>all.add(A(n)));
   all.forEach(u=>{const i=new Image();i.src=u});
   const t0=performance.now();
@@ -310,15 +332,16 @@ $('#envBtn').addEventListener('click',()=>{
 });
 function bloom(){
   const env=$('#env'),box=$('#flowers'),W=innerWidth,H=innerHeight,R=Math.hypot(W,H)/2;
-  const list=FLOWERS_LIST(),base=Math.max(100,Math.min(W,H)*.28),step=base*.46;
+  const list=FLOWERS_LIST(),base=Math.max(100,Math.min(W,H)*.28),step=base*.39;
+  let bag=[],last='';const pick=()=>{if(!bag.length)bag=list.slice().sort(()=>Math.random()-.5);let n=bag.pop();if(n===last&&bag.length){bag.unshift(n);n=bag.pop()}return last=n};
   const BURST=3000, POP=1300, HOLD=1500;   // fast splash, short pause, then everything falls
   env.classList.add('burst');
   // jittered grid with heavy overlap: every point of the screen ends up under 2-3 flowers
   const fl=[];let k=0;
   for(let gy=-1;gy*step<H+step;gy++)for(let gx=-1;gx*step<W+step;gx++){
-    const x=gx*step+(gy%2?step/2:0)+(Math.random()-.5)*step*.35-W/2;
-    const y=gy*step+(Math.random()-.5)*step*.35-H/2;
-    fl.push({x,y,d:Math.hypot(x,y)/R,rot:Math.random()*70-35,n:list[(k++*7+gy*3)%list.length],s:base*(1+Math.random()*.3)});
+    const x=gx*step+(gy%2?step/2:0)+(Math.random()-.5)*step*.95-W/2;
+    const y=gy*step+(Math.random()-.5)*step*.95-H/2;
+    fl.push({x,y,d:Math.hypot(x,y)/R,rot:Math.random()*120-60,n:pick(),s:base*(.85+Math.random()*.6)});
   }
   for(let i=fl.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[fl[i],fl[j]]=[fl[j],fl[i]]}   // random stacking order
   const frag=document.createDocumentFragment();
@@ -355,8 +378,8 @@ $('#bNo').addEventListener('click',()=>{
   $('#qimg').src=A(sadImgs[Math.min(noCount-1,sadImgs.length-1)]);
   $('#qtext').textContent=sadText[Math.min(noCount,sadText.length-1)];
   const love=$('#bLove'),no=$('#bNo');
-  love.style.fontSize=Math.min(20+noCount*7,56)+'px';love.style.padding=`${10+noCount*3}px ${22+noCount*7}px`;
-  no.style.fontSize=Math.max(18-noCount*3,6)+'px';no.style.padding=`${Math.max(9-noCount*1.6,2)}px ${Math.max(20-noCount*3.5,5)}px`;
+  const wd=$('#ask').classList.contains('wide')?4:0;love.style.fontSize=Math.min(20+wd+noCount*7,wd?40:56)+'px';love.style.padding=`${Math.min(10+wd+noCount*3,wd?20:99)}px ${Math.min(22+wd*2+noCount*7,wd?44:99)}px`;
+  if(wd){no.style.fontSize=Math.max(22-noCount*2,14)+'px';no.style.padding=`${Math.max(12-noCount,7)}px ${Math.max(28-noCount*3,16)}px`;}else{no.style.fontSize=Math.max(18-noCount*3,6)+'px';no.style.padding=`${Math.max(9-noCount*1.6,2)}px ${Math.max(20-noCount*3.5,5)}px`;}
 });
 $('#bLove').addEventListener('click',()=>{
   if(said)return;said=true;
