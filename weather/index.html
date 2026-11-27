@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="weather.css?v=3">
+<link rel="stylesheet" href="weather.css?v=4">
 </head>
 <body>
 <div id="splash" class="splash" role="status">
@@ -34,8 +34,8 @@
 
 <main class="wrap">
   <header class="top">
-    <button id="placeBtn" class="place" type="button" title="แตะเพื่อหาตำแหน่งใหม่">
-      <span class="pin">📍</span><span id="placeName">เชียงใหม่</span><span class="caret">⟳</span>
+    <button id="placeBtn" class="place" type="button" aria-haspopup="dialog" title="เลือกอำเภอ / ตำบล">
+      <span class="pin">📍</span><span id="placeName">เชียงใหม่</span><span class="caret">▾</span>
     </button>
     <div class="live" id="live" title="อัปเดตอัตโนมัติทุก 10 นาที">
       <i class="dot"></i><span id="liveText">กำลังโหลด</span>
@@ -87,10 +87,21 @@
       <li>อุณหภูมิที่วัดจริง, พยากรณ์ 7 วัน: <a href="https://www.tmd.go.th/" target="_blank" rel="noopener">กรมอุตุนิยมวิทยา</a> (<a href="https://data.tmd.go.th/api/" target="_blank" rel="noopener">TMD Open Data</a>) สถานีวัดจริงรายงานทุก 3 ชั่วโมง</li>
       <li>รายชั่วโมง, 16 วัน, ค่าตอนนี้ระหว่างรอบรายงานสถานี: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0) เป็นแบบจำลองของต่างประเทศ ไม่ใช่ข้อมูลกรมอุตุฯ</li>
     </ul>
+    <p>พิกัดอำเภอ/ตำบล: ขอบเขตการปกครองจาก OCHA (HDX) ผ่านแพ็กเกจ <a href="https://github.com/Atiwat-R/thai-geolocate" target="_blank" rel="noopener">thai-geolocate</a> · ชื่อสถานที่ตามตำแหน่ง: BigDataCloud</p>
     <p><b>เครดิตภาพท้องฟ้า</b> (Wikimedia Commons)</p>
     <ul id="credits" class="credits"></ul>
   </footer>
 </main>
+
+<dialog id="areaDlg" class="dlg">
+  <form method="dialog">
+    <h2>เลือกพื้นที่ในเชียงใหม่</h2>
+    <button id="gpsBtn" class="geo" type="button">📍 ใช้ตำแหน่งปัจจุบัน (อัตโนมัติ)</button>
+    <input id="areaSearch" type="search" placeholder="ค้นหาอำเภอ หรือ ตำบล" autocomplete="off">
+    <ul id="areaList" class="plist"></ul>
+    <button class="close" value="cancel">ปิด</button>
+  </form>
+</dialog>
 
 <dialog id="dayDlg" class="dlg day-dlg" aria-label="รายละเอียดรายวัน">
   <button id="dayClose" class="x" type="button" aria-label="ปิด">✕</button>
@@ -98,6 +109,6 @@
 </dialog>
 
 
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>
